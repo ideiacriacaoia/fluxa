@@ -526,3 +526,170 @@ export type Usuario = {
   ativo: boolean;
   created_at: string;
 };
+
+// ==============================================================================
+// 6. FASE 2 — CHÃO DE FÁBRICA, CRONOANÁLISE, APONTAMENTOS & EFICIÊNCIA
+// ==============================================================================
+
+export type TipoDesvio =
+  | 'falta_material'
+  | 'atraso'
+  | 'troca_operacao'
+  | 'regulagem_maquina'
+  | 'retrabalho'
+  | 'outro';
+
+export type StatusRemessaFaccao =
+  | 'enviada'
+  | 'recebida_parcial'
+  | 'recebida'
+  | 'atrasada';
+
+export type CelulaProducao = {
+  id: string;
+  tenant_id?: string;
+  nome: string;
+  etapa_padrao?: EtapaOP;
+  ativa: boolean;
+  created_at?: string;
+};
+
+export type Colaborador = {
+  id: string;
+  tenant_id?: string;
+  nome: string;
+  matricula?: string;
+  celula_padrao_id?: string;
+  celula_padrao_nome?: string;
+  ativo: boolean;
+  created_at?: string;
+};
+
+export type OperacaoPadrao = {
+  id: string;
+  tenant_id?: string;
+  nome: string;
+  etapa: EtapaOP;
+  tempo_padrao_segundos: number;
+  ativa: boolean;
+  created_at?: string;
+};
+
+export type ProdutoOperacao = {
+  id: string;
+  tenant_id?: string;
+  produto_id: string;
+  operacao_padrao_id: string;
+  operacao_nome?: string;
+  tempo_padrao_segundos?: number;
+  sequencia: number;
+  created_at?: string;
+};
+
+export type ApontamentoProducao = {
+  id: string;
+  tenant_id?: string;
+  ordem_producao_etapa_id: string;
+  celula_id: string;
+  celula_nome?: string;
+  colaborador_id: string;
+  colaborador_nome?: string;
+  operacao_padrao_id: string;
+  operacao_nome?: string;
+  quantidade_produzida: number;
+  tempo_gasto_segundos: number;
+  registrado_em: string;
+};
+
+export type DesvioProducao = {
+  id: string;
+  tenant_id?: string;
+  ordem_producao_etapa_id: string;
+  celula_id?: string;
+  celula_nome?: string;
+  colaborador_id?: string;
+  colaborador_nome?: string;
+  tipo: TipoDesvio;
+  tempo_parado_segundos?: number;
+  observacao?: string;
+  registrado_em: string;
+};
+
+export type EficienciaApontamento = {
+  apontamento_id: string;
+  tenant_id: string;
+  ordem_producao_etapa_id: string;
+  celula_id: string;
+  colaborador_id: string;
+  operacao_padrao_id: string;
+  quantidade_produzida: number;
+  tempo_gasto_segundos: number;
+  registrado_em: string;
+  tempo_padrao_segundos: number;
+  eficiencia_percentual: number;
+};
+
+export type RegraPremioProdutividade = {
+  id: string;
+  tenant_id?: string;
+  eficiencia_minima_percentual: number;
+  valor_premio_por_peca: number;
+  vigente_desde: string;
+  vigente_ate?: string;
+  ativa: boolean;
+  created_at?: string;
+};
+
+export type PremioCalculado = {
+  id: string;
+  tenant_id?: string;
+  colaborador_id: string;
+  colaborador_nome?: string;
+  periodo_inicio: string;
+  periodo_fim: string;
+  eficiencia_media_percentual: number;
+  regra_aplicada_id: string;
+  valor_total_premio: number;
+  premio_anterior_id?: string;
+  motivo_retificacao?: string;
+  calculado_em: string;
+};
+
+export type RemessaFaccao = {
+  id: string;
+  tenant_id?: string;
+  ordem_producao_etapa_id: string;
+  fornecedor_faccao_id: string;
+  fornecedor_nome?: string;
+  quantidade_enviada: number;
+  quantidade_recebida?: number;
+  data_envio: string;
+  prazo_devolucao: string;
+  status: StatusRemessaFaccao;
+  observacoes?: string;
+  created_at?: string;
+  updated_at?: string;
+  glosas?: GlosaFaccao[];
+};
+
+export type GlosaFaccao = {
+  id: string;
+  tenant_id?: string;
+  remessa_faccao_id: string;
+  quantidade_glosada: number;
+  motivo: string;
+  valor_desconto?: number;
+  registrado_em: string;
+};
+
+export type PainelGestaoAVista = {
+  tenant_id?: string;
+  celula_id: string;
+  celula_nome: string;
+  etapa_padrao?: EtapaOP;
+  dia: string;
+  total_produzido: number;
+  eficiencia_media: number;
+  total_desvios: number;
+  tempo_total_parado_segundos: number;
+};

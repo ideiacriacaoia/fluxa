@@ -1,5 +1,5 @@
--- ==============================================================================
--- FLUXA TÊXTIL — DADOS DE SEED REALISTAS (Fase 1 - Schema Oficial)
+﻿-- ==============================================================================
+-- FLUXA TÊXTIL — DADOS DE SEED REALISTAS (Fase 1 & Fase 2 - Schema Oficial)
 -- ==============================================================================
 
 -- 1. TENANT DEMO ID
@@ -49,10 +49,10 @@ ON CONFLICT DO NOTHING;
 
 INSERT INTO ficha_tecnica_consumo_tecido (tenant_id, ficha_tecnica_id, grade_id, consumo_metros)
 VALUES 
-  ('e1111111-1111-1111-1111-111111111111', 'ft111111-1111-1111-1111-111111111111', 'g1111111-1111-1111-1111-111111111111', 0.65), -- P
-  ('e1111111-1111-1111-1111-111111111111', 'ft111111-1111-1111-1111-111111111111', 'g2222222-2222-2222-2222-222222222222', 0.72), -- M
-  ('e1111111-1111-1111-1111-111111111111', 'ft111111-1111-1111-1111-111111111111', 'g3333333-3333-3333-3333-333333333333', 0.78), -- G
-  ('e1111111-1111-1111-1111-111111111111', 'ft111111-1111-1111-1111-111111111111', 'g4444444-4444-4444-4444-444444444444', 0.85); -- GG
+  ('e1111111-1111-1111-1111-111111111111', 'ft111111-1111-1111-1111-111111111111', 'g1111111-1111-1111-1111-111111111111', 0.65),
+  ('e1111111-1111-1111-1111-111111111111', 'ft111111-1111-1111-1111-111111111111', 'g2222222-2222-2222-2222-222222222222', 0.72),
+  ('e1111111-1111-1111-1111-111111111111', 'ft111111-1111-1111-1111-111111111111', 'g3333333-3333-3333-3333-333333333333', 0.78),
+  ('e1111111-1111-1111-1111-111111111111', 'ft111111-1111-1111-1111-111111111111', 'g4444444-4444-4444-4444-444444444444', 0.85);
 
 INSERT INTO ficha_tecnica_aviamentos (tenant_id, ficha_tecnica_id, descricao_aviamento, quantidade, unidade)
 VALUES 
@@ -70,7 +70,6 @@ VALUES
   ('pci11111-1111-1111-1111-111111111111', 'e1111111-1111-1111-1111-111111111111', 'pc111111-1111-1111-1111-111111111111', 'Meia Malha Penteada 30.1', 250.0, 'kg', 38.50, 'Preto Reativo', 1.82)
 ON CONFLICT (id) DO NOTHING;
 
--- Ao inserir o lote, o trigger fn_trg_lote_recebimento_entrada gera automaticamente a movimentação de entrada no estoque
 INSERT INTO lotes_recebimento (id, tenant_id, pedido_compra_item_id, codigo_lote, quantidade_recebida, unidade, cor, largura_tecido, nota_fiscal, data_recebimento, deposito_id)
 VALUES 
   ('l1111111-1111-1111-1111-111111111111', 'e1111111-1111-1111-1111-111111111111', 'pci11111-1111-1111-1111-111111111111', 'LT-2026-MALHA-PT-01', 250.0, 'kg', 'Preto Reativo', 1.82, 'NF-10492', '2026-08-15', 'd1111111-1111-1111-1111-111111111111')
@@ -87,10 +86,88 @@ VALUES
   ('ope11111-1111-1111-1111-111111111111', 'e1111111-1111-1111-1111-111111111111', 'op111111-1111-1111-1111-111111111111', 'corte', 'interna', null, 'concluida', '2026-08-25'),
   ('ope22222-2222-2222-2222-222222222222', 'e1111111-1111-1111-1111-111111111111', 'op111111-1111-1111-1111-111111111111', 'costura', 'faccao', 'f3333333-3333-3333-3333-333333333333', 'em_andamento', '2026-08-27'),
   ('ope33333-3333-3333-3333-333333333333', 'e1111111-1111-1111-1111-111111111111', 'op111111-1111-1111-1111-111111111111', 'acabamento', 'interna', null, 'planejada', null)
-ON CONFLICT DO NOTHING;
+ON CONFLICT (id) DO NOTHING;
 
 -- 9. RETALHO CONTROLADO
 INSERT INTO estoque_retalho (id, tenant_id, lote_origem_id, ordem_producao_id, metragem, cor, deposito_id, disponivel)
 VALUES 
   ('ret11111-1111-1111-1111-111111111111', 'e1111111-1111-1111-1111-111111111111', 'l1111111-1111-1111-1111-111111111111', 'op111111-1111-1111-1111-111111111111', 12.5, 'Preto Reativo', 'd4444444-4444-4444-4444-444444444444', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- ==============================================================================
+-- FASE 2: DADOS DE SEED CHÃO DE FÁBRICA, CRONOANÁLISE, APONTAMENTOS & FACÇÃO
+-- ==============================================================================
+
+-- 10. CÉLULAS DE PRODUÇÃO
+INSERT INTO celulas_producao (id, tenant_id, nome, etapa_padrao, ativa)
+VALUES
+  ('cel11111-1111-1111-1111-111111111111', 'e1111111-1111-1111-1111-111111111111', 'Célula 01 - Costura Reta & Pesponto', 'costura', true),
+  ('cel22222-2222-2222-2222-222222222222', 'e1111111-1111-1111-1111-111111111111', 'Célula 02 - Overloque & Interloque', 'costura', true),
+  ('cel33333-3333-3333-3333-333333333333', 'e1111111-1111-1111-1111-111111111111', 'Célula 03 - Acabamento, Passadoria & Dobra', 'acabamento', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- 11. COLABORADORES / COSTUREIRAS
+INSERT INTO colaboradores (id, tenant_id, nome, matricula, celula_padrao_id, ativo)
+VALUES
+  ('col11111-1111-1111-1111-111111111111', 'e1111111-1111-1111-1111-111111111111', 'Maria Helena Santos', 'MAT-101', 'cel11111-1111-1111-1111-111111111111', true),
+  ('col22222-2222-2222-2222-222222222222', 'e1111111-1111-1111-1111-111111111111', 'Luciana Pereira', 'MAT-102', 'cel22222-2222-2222-2222-222222222222', true),
+  ('col33333-3333-3333-3333-333333333333', 'e1111111-1111-1111-1111-111111111111', 'Rosana de Oliveira', 'MAT-103', 'cel22222-2222-2222-2222-222222222222', true),
+  ('col44444-4444-4444-4444-444444444444', 'e1111111-1111-1111-1111-111111111111', 'Claudete Silva', 'MAT-104', 'cel33333-3333-3333-3333-333333333333', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- 12. OPERAÇÕES PADRÃO (Cronoanálise em Segundos)
+INSERT INTO operacoes_padrao (id, tenant_id, nome, etapa, tempo_padrao_segundos, ativa)
+VALUES
+  ('opad1111-1111-1111-1111-111111111111', 'e1111111-1111-1111-1111-111111111111', 'Pregar Gola Canelada', 'costura', 45.0, true),
+  ('opad2222-2222-2222-2222-222222222222', 'e1111111-1111-1111-1111-111111111111', 'Pespontar Ombro a Ombro', 'costura', 35.0, true),
+  ('opad3333-3333-3333-3333-333333333333', 'e1111111-1111-1111-1111-111111111111', 'Fechar Lateral e Manga', 'costura', 55.0, true),
+  ('opad4444-4444-4444-4444-444444444444', 'e1111111-1111-1111-1111-111111111111', 'Fazer Bainha Galoneira', 'costura', 40.0, true),
+  ('opad5555-5555-5555-5555-555555555555', 'e1111111-1111-1111-1111-111111111111', 'Passar a Ferro e Dobrar', 'acabamento', 50.0, true)
+ON CONFLICT (id) DO NOTHING;
+
+-- 13. ROTEIRO DE PRODUÇÃO DO PRODUTO (Camiseta Básica)
+INSERT INTO produto_operacoes (tenant_id, produto_id, operacao_padrao_id, sequencia)
+VALUES
+  ('e1111111-1111-1111-1111-111111111111', 'p1111111-1111-1111-1111-111111111111', 'opad1111-1111-1111-1111-111111111111', 1),
+  ('e1111111-1111-1111-1111-111111111111', 'p1111111-1111-1111-1111-111111111111', 'opad2222-2222-2222-2222-222222222222', 2),
+  ('e1111111-1111-1111-1111-111111111111', 'p1111111-1111-1111-1111-111111111111', 'opad3333-3333-3333-3333-333333333333', 3),
+  ('e1111111-1111-1111-1111-111111111111', 'p1111111-1111-1111-1111-111111111111', 'opad4444-4444-4444-4444-444444444444', 4),
+  ('e1111111-1111-1111-1111-111111111111', 'p1111111-1111-1111-1111-111111111111', 'opad5555-5555-5555-5555-555555555555', 5)
+ON CONFLICT DO NOTHING;
+
+-- 14. APONTAMENTOS DE PRODUÇÃO EM TEMPO REAL
+INSERT INTO apontamentos_producao (id, tenant_id, ordem_producao_etapa_id, celula_id, colaborador_id, operacao_padrao_id, quantidade_produzida, tempo_gasto_segundos, registrado_em)
+VALUES
+  ('ap111111-1111-1111-1111-111111111111', 'e1111111-1111-1111-1111-111111111111', 'ope22222-2222-2222-2222-222222222222', 'cel11111-1111-1111-1111-111111111111', 'col11111-1111-1111-1111-111111111111', 'opad1111-1111-1111-1111-111111111111', 40, 1720.0, now() - interval '2 hours'),
+  ('ap222222-2222-2222-2222-222222222222', 'e1111111-1111-1111-1111-111111111111', 'ope22222-2222-2222-2222-222222222222', 'cel22222-2222-2222-2222-222222222222', 'col22222-2222-2222-2222-222222222222', 'opad3333-3333-3333-3333-333333333333', 35, 1850.0, now() - interval '1 hour')
+ON CONFLICT (id) DO NOTHING;
+
+-- 15. DESVIOS OPERACIONAIS
+INSERT INTO desvios_producao (id, tenant_id, ordem_producao_etapa_id, celula_id, colaborador_id, tipo, tempo_parado_segundos, observacao, registrado_em)
+VALUES
+  ('desv1111-1111-1111-1111-111111111111', 'e1111111-1111-1111-1111-111111111111', 'ope22222-2222-2222-2222-222222222222', 'cel11111-1111-1111-1111-111111111111', 'col11111-1111-1111-1111-111111111111', 'regulagem_maquina', 900.0, 'Troca de agulha e ajuste de tensão do ponto na galoneira', now() - interval '3 hours')
+ON CONFLICT (id) DO NOTHING;
+
+-- 16. REGRAS DE PRÊMIO POR PRODUTIVIDADE
+INSERT INTO regras_premio_produtividade (id, tenant_id, eficiencia_minima_percentual, valor_premio_por_peca, vigente_desde, ativa)
+VALUES
+  ('rpr11111-1111-1111-1111-111111111111', 'e1111111-1111-1111-1111-111111111111', 85.0, 0.35, '2026-01-01', true),
+  ('rpr22222-2222-2222-2222-222222222222', 'e1111111-1111-1111-1111-111111111111', 95.0, 0.60, '2026-01-01', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- 17. SNAPSHOT DE PRÊMIO CALCULADO
+INSERT INTO premios_calculados (id, tenant_id, colaborador_id, periodo_inicio, periodo_fim, eficiencia_media_percentual, regra_aplicada_id, valor_total_premio)
+VALUES
+  ('pre11111-1111-1111-1111-111111111111', 'e1111111-1111-1111-1111-111111111111', 'col11111-1111-1111-1111-111111111111', '2026-07-01', '2026-07-31', 97.4, 'rpr22222-2222-2222-2222-222222222222', 450.00)
+ON CONFLICT (id) DO NOTHING;
+
+-- 18. REMESSAS DE FACÇÃO & GLOSAS
+INSERT INTO remessas_faccao (id, tenant_id, ordem_producao_etapa_id, fornecedor_faccao_id, quantidade_enviada, quantidade_recebida, data_envio, prazo_devolucao, status, observacoes)
+VALUES
+  ('rem11111-1111-1111-1111-111111111111', 'e1111111-1111-1111-1111-111111111111', 'ope22222-2222-2222-2222-222222222222', 'f3333333-3333-3333-3333-333333333333', 150, 147, '2026-08-27', '2026-09-02', 'recebida_parcial', 'Remessa enviada com linha e aviamentos inclusos')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO glosas_faccao (id, tenant_id, remessa_faccao_id, quantidade_glosada, motivo, valor_desconto)
+VALUES
+  ('glo11111-1111-1111-1111-111111111111', 'e1111111-1111-1111-1111-111111111111', 'rem11111-1111-1111-1111-111111111111', 3, 'Costura franzida na barra e gola torta não conforme com a ficha técnica', 36.00)
 ON CONFLICT (id) DO NOTHING;
