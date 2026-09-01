@@ -2,32 +2,198 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+/* ==========================================================================
+   FLUXA TÊXTIL — SISTEMA DE DESIGN TOKENS (4 TEMAS VISUAIS)
+   ========================================================================== */
+
+:root,
+[data-theme="padrao"] {
+  /* Fundo e Superfícies */
+  --bg-app: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-surface-hover: #f1f5f9;
+  --bg-sidebar: #0b132b;
+  --bg-sidebar-hover: #1c2541;
+  --bg-sidebar-active: #0284c7;
+  --bg-sidebar-text: #cbd5e1;
+  --bg-header: #ffffff;
+
+  /* Bordas */
+  --border-main: #e2e8f0;
+  --border-subtle: #f1f5f9;
+
+  /* Tipografia */
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --text-dim: #94a3b8;
+
+  /* Ações Primárias */
+  --primary: #0284c7;
+  --primary-hover: #0369a1;
+  --primary-foreground: #ffffff;
+  --primary-light: #e0f2fe;
+
+  /* Acentos da Marca */
+  --accent-gold: #f59e0b;
+  --accent-teal: #0d9488;
+
+  /* Status */
+  --status-success: #10b981;
+  --status-warning: #f59e0b;
+  --status-danger: #ef4444;
+
+  /* Tooltips */
+  --tooltip-bg: #0f172a;
+  --tooltip-text: #f8fafc;
+  --tooltip-border: #1e293b;
 }
 
+[data-theme="dark-night"] {
+  /* Fundo e Superfícies */
+  --bg-app: #090a0f;
+  --bg-surface: #12131a;
+  --bg-surface-hover: #1a1b24;
+  --bg-sidebar: #0c0d12;
+  --bg-sidebar-hover: #181922;
+  --bg-sidebar-active: #2563eb;
+  --bg-sidebar-text: #94a3b8;
+  --bg-header: #12131a;
+
+  /* Bordas */
+  --border-main: #222430;
+  --border-subtle: #191a22;
+
+  /* Tipografia */
+  --text-main: #f1f5f9;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+
+  /* Ações Primárias */
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
+  --primary-foreground: #ffffff;
+  --primary-light: #1e293b;
+
+  /* Acentos da Marca */
+  --accent-gold: #eab308;
+  --accent-teal: #14b8a6;
+
+  /* Status */
+  --status-success: #22c55e;
+  --status-warning: #eab308;
+  --status-danger: #f43f5e;
+
+  /* Tooltips */
+  --tooltip-bg: #1a1b24;
+  --tooltip-text: #ffffff;
+  --tooltip-border: #2e3040;
+}
+
+[data-theme="tokyo"] {
+  /* Fundo e Superfícies */
+  --bg-app: #16161e;
+  --bg-surface: #1a1b26;
+  --bg-surface-hover: #24283b;
+  --bg-sidebar: #13141c;
+  --bg-sidebar-hover: #202336;
+  --bg-sidebar-active: #7aa2f7;
+  --bg-sidebar-text: #a9b1d6;
+  --bg-header: #1a1b26;
+
+  /* Bordas */
+  --border-main: #2f354a;
+  --border-subtle: #24283b;
+
+  /* Tipografia */
+  --text-main: #c0caf5;
+  --text-muted: #7aa2f7;
+  --text-dim: #565f89;
+
+  /* Ações Primárias */
+  --primary: #7aa2f7;
+  --primary-hover: #89ddff;
+  --primary-foreground: #0f141c;
+  --primary-light: #283457;
+
+  /* Acentos da Marca */
+  --accent-gold: #e0af68;
+  --accent-teal: #73daca;
+
+  /* Status */
+  --status-success: #9ece6a;
+  --status-warning: #e0af68;
+  --status-danger: #f7768e;
+
+  /* Tooltips */
+  --tooltip-bg: #24283b;
+  --tooltip-text: #c0caf5;
+  --tooltip-border: #414868;
+}
+
+[data-theme="ideia"] {
+  /* Fundo e Superfícies (Preto e Grafite Ônix) */
+  --bg-app: #0a0e14;
+  --bg-surface: #111622;
+  --bg-surface-hover: #182030;
+  --bg-sidebar: #070a0e;
+  --bg-sidebar-hover: #141b27;
+  --bg-sidebar-active: #f59e0b;
+  --bg-sidebar-text: #cbd5e1;
+  --bg-header: #111622;
+
+  /* Bordas */
+  --border-main: #1f293d;
+  --border-subtle: #151c2a;
+
+  /* Tipografia */
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+
+  /* Ações Primárias (Amarelo-Ouro) */
+  --primary: #f59e0b;
+  --primary-hover: #d97706;
+  --primary-foreground: #090d13;
+  --primary-light: #2d2006;
+
+  /* Acentos da Marca (Ouro & Verde-Oceano) */
+  --accent-gold: #fbbf24;
+  --accent-teal: #14b8a6;
+
+  /* Status */
+  --status-success: #14b8a6;
+  --status-warning: #f59e0b;
+  --status-danger: #f43f5e;
+
+  /* Tooltips */
+  --tooltip-bg: #182030;
+  --tooltip-text: #f8fafc;
+  --tooltip-border: #f59e0b40;
+}
+
+/* Base Body Styles */
 body {
-  color: var(--foreground);
-  background: var(--background);
+  color: var(--text-main);
+  background-color: var(--bg-app);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-/* Custom scrollbars */
+/* Custom Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: var(--bg-app);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: var(--border-main);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: var(--text-dim);
 }

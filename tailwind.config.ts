@@ -9,8 +9,49 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
+        background: "var(--bg-app)",
+        foreground: "var(--text-main)",
+        surface: {
+          DEFAULT: "var(--bg-surface)",
+          hover: "var(--bg-surface-hover)",
+        },
+        header: "var(--bg-header)",
+        border: {
+          main: "var(--border-main)",
+          subtle: "var(--border-subtle)",
+        },
+        text: {
+          main: "var(--text-main)",
+          muted: "var(--text-muted)",
+          dim: "var(--text-dim)",
+        },
+        brand: {
+          primary: "var(--primary)",
+          hover: "var(--primary-hover)",
+          foreground: "var(--primary-foreground)",
+          light: "var(--primary-light)",
+        },
+        accent: {
+          gold: "var(--accent-gold)",
+          teal: "var(--accent-teal)",
+        },
+        status: {
+          success: "var(--status-success)",
+          warning: "var(--status-warning)",
+          danger: "var(--status-danger)",
+        },
+        tooltip: {
+          bg: "var(--tooltip-bg)",
+          text: "var(--tooltip-text)",
+          border: "var(--tooltip-border)",
+        },
+        sidebar: {
+          bg: "var(--bg-sidebar)",
+          hover: "var(--bg-sidebar-hover)",
+          active: "var(--bg-sidebar-active)",
+          text: "var(--bg-sidebar-text)",
+          border: "var(--border-main)",
+        },
         textil: {
           50: "#f0f9ff",
           100: "#e0f2fe",
@@ -29,15 +70,10 @@ const config: Config = {
           900: "#0f172a",
           950: "#020617",
         },
-        sidebar: {
-          bg: "#0B132B",
-          hover: "#1C2541",
-          active: "#3A506B",
-          border: "#1F2937",
-        }
       },
     },
   },
   plugins: [],
 };
 export default config;
+

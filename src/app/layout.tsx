@@ -15,16 +15,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR">
-      <body className="antialiased bg-slate-50 text-slate-900 flex h-screen overflow-hidden">
+    <html lang="pt-BR" data-theme="padrao">
+      <body className="antialiased bg-background text-foreground flex h-screen overflow-hidden">
         <TextilStoreProvider>
-          {/* Sidebar */}
+          {/* Sidebar Retrátil */}
           <Sidebar />
 
           {/* Main Content Area */}
           <div className="flex-1 flex flex-col h-screen overflow-hidden">
             <Header />
-            <main className="flex-1 overflow-y-auto p-6 bg-slate-50">
+            <main className="flex-1 overflow-y-auto p-6 bg-background">
               {children}
             </main>
           </div>

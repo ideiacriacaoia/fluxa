@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import {
   Empresa,
   Usuario,
@@ -44,6 +44,8 @@ import {
   initialOrdensProducao,
 } from "./initial-data";
 
+export type TemaTipo = 'padrao' | 'dark-night' | 'tokyo' | 'ideia';
+
 interface TextilStoreContextType {
   empresa: Empresa;
   usuarios: Usuario[];
@@ -52,6 +54,8 @@ interface TextilStoreContextType {
   usuarioPermissoes: UsuarioPermissao[];
   auditoriaPermissoes: AuditoriaPermissao[];
   usuarioLogado: Usuario;
+  temaAtual: TemaTipo;
+  sidebarRecolhida: boolean;
   depositos: Deposito[];
   fornecedores: Fornecedor[];
   itensCatalogo: ItemCatalogo[];
@@ -63,6 +67,10 @@ interface TextilStoreContextType {
   produtos: Produto[];
   fichasTecnicas: FichaTecnica[];
   ordensProducao: OrdemProducao[];
+
+  // Ações de Tema & Layout
+  setTemaAtual: (tema: TemaTipo) => void;
+  toggleSidebarRecolhida: () => void;
 
   // Ações de Usuários & Permissões
   setUsuarioLogado: (usuario: Usuario) => void;
@@ -168,6 +176,52 @@ export function TextilStoreProvider({ children }: { children: React.ReactNode })
   const [usuarioPermissoes, setUsuarioPermissoes] = useState<UsuarioPermissao[]>(initialUsuarioPermissoes);
   const [auditoriaPermissoes, setAuditoriaPermissoes] = useState<AuditoriaPermissao[]>(initialAuditoriaPermissoes);
   const [usuarioLogado, setUsuarioLogado] = useState<Usuario>(initialUsuarios[0]);
+
+  // Estados de Tema e Layout Retrátil
+  const [temaAtual, setTemaAtualState] = useState<TemaTipo>("padrao");
+  const [sidebarRecolhida, setSidebarRecolhida] = useState<boolean>(false);
+
+  // Sincronização inicial com localStorage / DOM
+  useEffect(() => {
+    try {
+      const savedTheme = localStorage.getItem("fluxa_theme") as TemaTipo;
+      if (savedTheme && ["padrao", "dark-night", "tokyo", "ideia"].includes(savedTheme)) {
+        setTemaAtualState(savedTheme);
+        document.documentElement.setAttribute("data-theme", savedTheme);
+      } else {
+        document.documentElement.setAttribute("data-theme", "padrao");
+      }
+
+      const savedSidebar = localStorage.getItem("fluxa_sidebar_collapsed");
+      if (savedSidebar !== null) {
+        setSidebarRecolhida(savedSidebar === "true");
+      }
+    } catch {
+      // ambiente SSR ou sem suporte a localStorage
+    }
+  }, []);
+
+  const setTemaAtual = (novoTema: TemaTipo) => {
+    setTemaAtualState(novoTema);
+    try {
+      document.documentElement.setAttribute("data-theme", novoTema);
+      localStorage.setItem("fluxa_theme", novoTema);
+    } catch {
+      // fallback
+    }
+  };
+
+  const toggleSidebarRecolhida = () => {
+    setSidebarRecolhida((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem("fluxa_sidebar_collapsed", String(next));
+      } catch {
+        // fallback
+      }
+      return next;
+    });
+  };
 
   const [depositos, setDepositos] = useState<Deposito[]>(initialDepositos);
   const [fornecedores, setFornecedores] = useState<Fornecedor[]>(initialFornecedores);
@@ -911,6 +965,10 @@ export function TextilStoreProvider({ children }: { children: React.ReactNode })
         usuarioPermissoes,
         auditoriaPermissoes,
         usuarioLogado,
+        temaAtual,
+        sidebarRecolhida,
+        setTemaAtual,
+        toggleSidebarRecolhida,
         setUsuarioLogado,
         addUsuario,
         updateUsuario,
