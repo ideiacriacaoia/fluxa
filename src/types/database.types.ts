@@ -518,13 +518,18 @@ export type Empresa = {
 };
 export type Usuario = {
   id: string;
-  empresa_id: string;
+  tenant_id?: string;
+  empresa_id?: string;
   nome: string;
   email: string;
+  papel_id?: string;
+  papel_nome?: string;
   cargo?: string;
-  nivel_acesso: 'admin' | 'gerente_pcp' | 'comprador' | 'operador';
+  nivel_acesso?: 'admin' | 'gerente_pcp' | 'comprador' | 'operador' | string;
   ativo: boolean;
+  ultimo_acesso?: string;
   created_at: string;
+  updated_at?: string;
 };
 
 // ==============================================================================
@@ -692,4 +697,71 @@ export type PainelGestaoAVista = {
   eficiencia_media: number;
   total_desvios: number;
   tempo_total_parado_segundos: number;
+};
+
+// ==============================================================================
+// 7. USUÁRIOS, PAPÉIS & PERMISSÕES GRANULARES
+// ==============================================================================
+
+export type ModuloSistema =
+  | 'compras'
+  | 'estoque'
+  | 'fichas_tecnicas'
+  | 'pcp_producao'
+  | 'vendas'
+  | 'financeiro'
+  | 'cadastros_base'
+  | 'usuarios_permissoes';
+
+export type NivelPermissao =
+  | 'nenhum'
+  | 'visualizar'
+  | 'editar'
+  | 'administrar';
+
+export type Papel = {
+  id: string;
+  tenant_id?: string;
+  nome: string;
+  descricao?: string;
+  is_sistema: boolean;
+  created_at?: string;
+  permissoes?: PapelPermissao[];
+};
+
+export type PapelPermissao = {
+  id?: string;
+  tenant_id?: string;
+  papel_id: string;
+  modulo: ModuloSistema;
+  nivel_acesso: NivelPermissao;
+  created_at?: string;
+};
+
+export type UsuarioPermissao = {
+  id?: string;
+  tenant_id?: string;
+  usuario_id: string;
+  modulo: ModuloSistema;
+  nivel_acesso: NivelPermissao;
+  created_at?: string;
+};
+
+export type AuditoriaPermissao = {
+  id: string;
+  tenant_id?: string;
+  usuario_alterado_id: string;
+  usuario_alterado_nome?: string;
+  alterado_por_id?: string;
+  alterado_por_nome?: string;
+  tipo_alteracao: string;
+  detalhes: Record<string, any>;
+  registrado_em: string;
+};
+
+export type UsuarioComPermissoes = Usuario & {
+  papel?: Papel;
+  papel_nome?: string;
+  excecoes_permissoes?: UsuarioPermissao[];
+  permissoes_efetivas?: Record<ModuloSistema, NivelPermissao>;
 };

@@ -16,6 +16,7 @@ import {
   Building2,
   Tags,
   Warehouse,
+  Users,
   ChevronRight,
   Sparkles,
   Scissors,
@@ -64,6 +65,7 @@ const navigation = [
       { name: "Fornecedores & Facções", href: "/cadastros/fornecedores", icon: Building2 },
       { name: "Catálogo de Insumos", href: "/cadastros/insumos", icon: Tags },
       { name: "Depósitos", href: "/cadastros/depositos", icon: Warehouse },
+      { name: "Usuários & Acessos", href: "/cadastros/usuarios", icon: Users },
     ],
   },
 ];

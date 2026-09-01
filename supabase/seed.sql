@@ -171,3 +171,81 @@ INSERT INTO glosas_faccao (id, tenant_id, remessa_faccao_id, quantidade_glosada,
 VALUES
   ('glo11111-1111-1111-1111-111111111111', 'e1111111-1111-1111-1111-111111111111', 'rem11111-1111-1111-1111-111111111111', 3, 'Costura franzida na barra e gola torta não conforme com a ficha técnica', 36.00)
 ON CONFLICT (id) DO NOTHING;
+
+-- ==============================================================================
+-- FASE 3 / USUÁRIOS: PAPÉIS TÊXTEIS, MATRIZ DE PERMISSÕES & AUDITORIA
+-- ==============================================================================
+
+-- 19. PAPÉIS PADRÃO DO SISTEMA
+INSERT INTO papeis (id, tenant_id, nome, descricao, is_sistema)
+VALUES
+  ('pap11111-1111-1111-1111-111111111111', 'e1111111-1111-1111-1111-111111111111', 'Administrador', 'Acesso irrestrito a todos os módulos e configurações da fábrica', true),
+  ('pap22222-2222-2222-2222-222222222222', 'e1111111-1111-1111-1111-111111111111', 'Comprador', 'Gestão de fornecedores e pedidos de compra de matéria-prima e aviamentos', true),
+  ('pap33333-3333-3333-3333-333333333333', 'e1111111-1111-1111-1111-111111111111', 'Gestor de Produção', 'Planejamento e controle de produção (PCP), ordens de produção e fichas técnicas', true),
+  ('pap44444-4444-4444-4444-444444444444', 'e1111111-1111-1111-1111-111111111111', 'Almoxarife', 'Movimentação e controle de estoque de tecidos, retalhos e produto acabado', true),
+  ('pap55555-5555-5555-5555-555555555555', 'e1111111-1111-1111-1111-111111111111', 'Operador de Chão de Fábrica', 'Acesso restrito ao registro de apontamentos e paradas/desvios no chão de fábrica', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- 20. MATRIZ DE PERMISSÕES BASE POR PAPEL
+-- Administrador: administrar em todos
+INSERT INTO papel_permissoes (tenant_id, papel_id, modulo, nivel_acesso)
+VALUES
+  ('e1111111-1111-1111-1111-111111111111', 'pap11111-1111-1111-1111-111111111111', 'compras', 'administrar'),
+  ('e1111111-1111-1111-1111-111111111111', 'pap11111-1111-1111-1111-111111111111', 'estoque', 'administrar'),
+  ('e1111111-1111-1111-1111-111111111111', 'pap11111-1111-1111-1111-111111111111', 'fichas_tecnicas', 'administrar'),
+  ('e1111111-1111-1111-1111-111111111111', 'pap11111-1111-1111-1111-111111111111', 'pcp_producao', 'administrar'),
+  ('e1111111-1111-1111-1111-111111111111', 'pap11111-1111-1111-1111-111111111111', 'vendas', 'administrar'),
+  ('e1111111-1111-1111-1111-111111111111', 'pap11111-1111-1111-1111-111111111111', 'financeiro', 'administrar'),
+  ('e1111111-1111-1111-1111-111111111111', 'pap11111-1111-1111-1111-111111111111', 'cadastros_base', 'administrar'),
+  ('e1111111-1111-1111-1111-111111111111', 'pap11111-1111-1111-1111-111111111111', 'usuarios_permissoes', 'administrar'),
+
+  -- Comprador
+  ('e1111111-1111-1111-1111-111111111111', 'pap22222-2222-2222-2222-222222222222', 'compras', 'administrar'),
+  ('e1111111-1111-1111-1111-111111111111', 'pap22222-2222-2222-2222-222222222222', 'estoque', 'visualizar'),
+  ('e1111111-1111-1111-1111-111111111111', 'pap22222-2222-2222-2222-222222222222', 'fichas_tecnicas', 'visualizar'),
+  ('e1111111-1111-1111-1111-111111111111', 'pap22222-2222-2222-2222-222222222222', 'pcp_producao', 'nenhum'),
+  ('e1111111-1111-1111-1111-111111111111', 'pap22222-2222-2222-2222-222222222222', 'cadastros_base', 'visualizar'),
+
+  -- Gestor de Produção
+  ('e1111111-1111-1111-1111-111111111111', 'pap33333-3333-3333-3333-333333333333', 'compras', 'visualizar'),
+  ('e1111111-1111-1111-1111-111111111111', 'pap33333-3333-3333-3333-333333333333', 'estoque', 'editar'),
+  ('e1111111-1111-1111-1111-111111111111', 'pap33333-3333-3333-3333-333333333333', 'fichas_tecnicas', 'editar'),
+  ('e1111111-1111-1111-1111-111111111111', 'pap33333-3333-3333-3333-333333333333', 'pcp_producao', 'administrar'),
+  ('e1111111-1111-1111-1111-111111111111', 'pap33333-3333-3333-3333-333333333333', 'cadastros_base', 'visualizar'),
+
+  -- Almoxarife
+  ('e1111111-1111-1111-1111-111111111111', 'pap44444-4444-4444-4444-444444444444', 'compras', 'visualizar'),
+  ('e1111111-1111-1111-1111-111111111111', 'pap44444-4444-4444-4444-444444444444', 'estoque', 'administrar'),
+  ('e1111111-1111-1111-1111-111111111111', 'pap44444-4444-4444-4444-444444444444', 'fichas_tecnicas', 'visualizar'),
+  ('e1111111-1111-1111-1111-111111111111', 'pap44444-4444-4444-4444-444444444444', 'pcp_producao', 'visualizar'),
+  ('e1111111-1111-1111-1111-111111111111', 'pap44444-4444-4444-4444-444444444444', 'cadastros_base', 'visualizar'),
+
+  -- Operador de Chão de Fábrica
+  ('e1111111-1111-1111-1111-111111111111', 'pap55555-5555-5555-5555-555555555555', 'compras', 'nenhum'),
+  ('e1111111-1111-1111-1111-111111111111', 'pap55555-5555-5555-5555-555555555555', 'estoque', 'nenhum'),
+  ('e1111111-1111-1111-1111-111111111111', 'pap55555-5555-5555-5555-555555555555', 'fichas_tecnicas', 'nenhum'),
+  ('e1111111-1111-1111-1111-111111111111', 'pap55555-5555-5555-5555-555555555555', 'pcp_producao', 'editar'),
+  ('e1111111-1111-1111-1111-111111111111', 'pap55555-5555-5555-5555-555555555555', 'cadastros_base', 'nenhum')
+ON CONFLICT DO NOTHING;
+
+-- 21. USUÁRIOS DEMO
+INSERT INTO usuarios (id, tenant_id, nome, email, papel_id, cargo, ativo, ultimo_acesso)
+VALUES
+  ('usr11111-1111-1111-1111-111111111111', 'e1111111-1111-1111-1111-111111111111', 'João Marcos', 'joao.marcos@fluxatextil.com.br', 'pap11111-1111-1111-1111-111111111111', 'Diretor de Operações', true, now() - interval '5 minutes'),
+  ('usr22222-2222-2222-2222-222222222222', 'e1111111-1111-1111-1111-111111111111', 'Carlos Eduardo Silva', 'carlos.compras@fluxatextil.com.br', 'pap22222-2222-2222-2222-222222222222', 'Comprador Sênior', true, now() - interval '2 hours'),
+  ('usr33333-3333-3333-3333-333333333333', 'e1111111-1111-1111-1111-111111111111', 'Mariana Souza', 'mariana.pcp@fluxatextil.com.br', 'pap33333-3333-3333-3333-333333333333', 'Gerente de PCP', true, now() - interval '1 day'),
+  ('usr44444-4444-4444-4444-444444444444', 'e1111111-1111-1111-1111-111111111111', 'Roberto Alves', 'roberto.estoque@fluxatextil.com.br', 'pap44444-4444-4444-4444-444444444444', 'Almoxarife Chefe', true, now() - interval '3 hours'),
+  ('usr55555-5555-5555-5555-555555555555', 'e1111111-1111-1111-1111-111111111111', 'Luciana Pereira', 'luciana.operador@fluxatextil.com.br', 'pap55555-5555-5555-5555-555555555555', 'Costureira / Líder de Célula', true, now() - interval '4 hours')
+ON CONFLICT (id) DO NOTHING;
+
+-- 22. EXCEÇÃO DE PERMISSÃO POR USUÁRIO (Ex: Carlos Comprador precisa editar retalhos/estoque)
+INSERT INTO usuario_permissoes (tenant_id, usuario_id, modulo, nivel_acesso)
+VALUES
+  ('e1111111-1111-1111-1111-111111111111', 'usr22222-2222-2222-2222-222222222222', 'estoque', 'editar')
+ON CONFLICT DO NOTHING;
+
+-- 23. AUDITORIA DE PERMISSÕES
+INSERT INTO auditoria_permissoes (tenant_id, usuario_alterado_id, alterado_por_id, tipo_alteracao, detalhes)
+VALUES
+  ('e1111111-1111-1111-1111-111111111111', 'usr22222-2222-2222-2222-222222222222', 'usr11111-1111-1111-1111-111111111111', 'excecao_permissao', '{"modulo": "estoque", "de": "visualizar", "para": "editar", "motivo": "Liberacao para ajuste de retalhos de compras"}'::jsonb),
+  ('e1111111-1111-1111-1111-111111111111', 'usr11111-1111-1111-1111-111111111111', 'usr11111-1111-1111-1111-111111111111', 'criacao_usuario', '{"papel": "Administrador", "cargo": "Diretor de Operações"}'::jsonb);

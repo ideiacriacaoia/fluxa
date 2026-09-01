@@ -4,6 +4,12 @@ import React, { createContext, useContext, useState } from "react";
 import {
   Empresa,
   Usuario,
+  Papel,
+  PapelPermissao,
+  UsuarioPermissao,
+  AuditoriaPermissao,
+  ModuloSistema,
+  NivelPermissao,
   Deposito,
   Fornecedor,
   ItemCatalogo,
@@ -21,6 +27,10 @@ import {
 import {
   initialEmpresa,
   initialUsuarios,
+  initialPapeis,
+  initialPapelPermissoes,
+  initialUsuarioPermissoes,
+  initialAuditoriaPermissoes,
   initialDepositos,
   initialFornecedores,
   initialItensCatalogo,
@@ -37,6 +47,11 @@ import {
 interface TextilStoreContextType {
   empresa: Empresa;
   usuarios: Usuario[];
+  papeis: Papel[];
+  papelPermissoes: PapelPermissao[];
+  usuarioPermissoes: UsuarioPermissao[];
+  auditoriaPermissoes: AuditoriaPermissao[];
+  usuarioLogado: Usuario;
   depositos: Deposito[];
   fornecedores: Fornecedor[];
   itensCatalogo: ItemCatalogo[];
@@ -48,6 +63,15 @@ interface TextilStoreContextType {
   produtos: Produto[];
   fichasTecnicas: FichaTecnica[];
   ordensProducao: OrdemProducao[];
+
+  // Ações de Usuários & Permissões
+  setUsuarioLogado: (usuario: Usuario) => void;
+  addUsuario: (usuario: { nome: string; email: string; papel_id: string; cargo?: string }) => void;
+  updateUsuario: (id: string, dados: { nome?: string; email?: string; papel_id?: string; cargo?: string }) => void;
+  toggleStatusUsuario: (id: string) => void;
+  setUsuarioPermissao: (usuario_id: string, modulo: ModuloSistema, nivel_acesso: NivelPermissao) => void;
+  resetUsuarioPermissoes: (usuario_id: string) => void;
+  getUsuarioPermissoesEfetivas: (usuario_id: string) => Record<ModuloSistema, NivelPermissao>;
 
   // Ações de Compras & Lotes
   addPedidoCompra: (pedido: Omit<PedidoCompra, "id" | "tenant_id" | "numero_pedido" | "created_at">) => void;
@@ -138,7 +162,13 @@ const TextilStoreContext = createContext<TextilStoreContextType | null>(null);
 
 export function TextilStoreProvider({ children }: { children: React.ReactNode }) {
   const [empresa] = useState<Empresa>(initialEmpresa);
-  const [usuarios] = useState<Usuario[]>(initialUsuarios);
+  const [papeis, setPapeis] = useState<Papel[]>(initialPapeis);
+  const [papelPermissoes, setPapelPermissoes] = useState<PapelPermissao[]>(initialPapelPermissoes);
+  const [usuarios, setUsuarios] = useState<Usuario[]>(initialUsuarios);
+  const [usuarioPermissoes, setUsuarioPermissoes] = useState<UsuarioPermissao[]>(initialUsuarioPermissoes);
+  const [auditoriaPermissoes, setAuditoriaPermissoes] = useState<AuditoriaPermissao[]>(initialAuditoriaPermissoes);
+  const [usuarioLogado, setUsuarioLogado] = useState<Usuario>(initialUsuarios[0]);
+
   const [depositos, setDepositos] = useState<Deposito[]>(initialDepositos);
   const [fornecedores, setFornecedores] = useState<Fornecedor[]>(initialFornecedores);
   const [itensCatalogo, setItensCatalogo] = useState<ItemCatalogo[]>(initialItensCatalogo);
@@ -150,6 +180,215 @@ export function TextilStoreProvider({ children }: { children: React.ReactNode })
   const [produtos, setProdutos] = useState<Produto[]>(initialProdutos);
   const [fichasTecnicas, setFichasTecnicas] = useState<FichaTecnica[]>(initialFichasTecnicas);
   const [ordensProducao, setOrdensProducao] = useState<OrdemProducao[]>(initialOrdensProducao);
+
+  // Cálculo de permissões efetivas para um usuário
+  const getUsuarioPermissoesEfetivas = (usuarioId: string): Record<ModuloSistema, NivelPermissao> => {
+    const user = usuarios.find((u) => u.id === usuarioId);
+    const modulos: ModuloSistema[] = [
+      "compras",
+      "estoque",
+      "fichas_tecnicas",
+      "pcp_producao",
+      "vendas",
+      "financeiro",
+      "cadastros_base",
+      "usuarios_permissoes",
+    ];
+
+    const resultado = {} as Record<ModuloSistema, NivelPermissao>;
+
+    modulos.forEach((mod) => {
+      // 1. Verificar se existe exceção específica
+      const excecao = usuarioPermissoes.find(
+        (up) => up.usuario_id === usuarioId && up.modulo === mod
+      );
+      if (excecao) {
+        resultado[mod] = excecao.nivel_acesso;
+        return;
+      }
+
+      // 2. Se não, buscar no papel
+      if (user?.papel_id) {
+        const permPapel = papelPermissoes.find(
+          (pp) => pp.papel_id === user.papel_id && pp.modulo === mod
+        );
+        if (permPapel) {
+          resultado[mod] = permPapel.nivel_acesso;
+          return;
+        }
+      }
+
+      // 3. Fallback
+      resultado[mod] = user?.nivel_acesso === "admin" ? "administrar" : "nenhum";
+    });
+
+    return resultado;
+  };
+
+  // Criar Usuário
+  const addUsuario = (dados: { nome: string; email: string; papel_id: string; cargo?: string }) => {
+    const papel = papeis.find((p) => p.id === dados.papel_id);
+    const novoUsuario: Usuario = {
+      id: "usr_" + Math.random().toString(36).substr(2, 9),
+      tenant_id: empresa.id,
+      empresa_id: empresa.id,
+      nome: dados.nome,
+      email: dados.email,
+      papel_id: dados.papel_id,
+      papel_nome: papel?.nome || "Personalizado",
+      cargo: dados.cargo || "Colaborador",
+      ativo: true,
+      ultimo_acesso: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+    };
+
+    setUsuarios([novoUsuario, ...usuarios]);
+
+    const novoLog: AuditoriaPermissao = {
+      id: "aud_" + Math.random().toString(36).substr(2, 9),
+      tenant_id: empresa.id,
+      usuario_alterado_id: novoUsuario.id,
+      usuario_alterado_nome: novoUsuario.nome,
+      alterado_por_id: usuarioLogado.id,
+      alterado_por_nome: usuarioLogado.nome,
+      tipo_alteracao: "criacao_usuario",
+      detalhes: {
+        papel: papel?.nome,
+        cargo: dados.cargo,
+        email: dados.email,
+      },
+      registrado_em: new Date().toISOString(),
+    };
+    setAuditoriaPermissoes([novoLog, ...auditoriaPermissoes]);
+  };
+
+  // Editar Usuário
+  const updateUsuario = (id: string, dados: { nome?: string; email?: string; papel_id?: string; cargo?: string }) => {
+    const papel = dados.papel_id ? papeis.find((p) => p.id === dados.papel_id) : undefined;
+    const userAntigo = usuarios.find((u) => u.id === id);
+
+    setUsuarios(
+      usuarios.map((u) => {
+        if (u.id === id) {
+          return {
+            ...u,
+            ...dados,
+            papel_nome: papel ? papel.nome : u.papel_nome,
+            updated_at: new Date().toISOString(),
+          };
+        }
+        return u;
+      })
+    );
+
+    if (dados.papel_id && userAntigo && userAntigo.papel_id !== dados.papel_id) {
+      const novoLog: AuditoriaPermissao = {
+        id: "aud_" + Math.random().toString(36).substr(2, 9),
+        tenant_id: empresa.id,
+        usuario_alterado_id: id,
+        usuario_alterado_nome: dados.nome || userAntigo.nome,
+        alterado_por_id: usuarioLogado.id,
+        alterado_por_nome: usuarioLogado.nome,
+        tipo_alteracao: "mudanca_papel",
+        detalhes: {
+          papel_anterior: userAntigo.papel_nome,
+          papel_novo: papel?.nome,
+        },
+        registrado_em: new Date().toISOString(),
+      };
+      setAuditoriaPermissoes([novoLog, ...auditoriaPermissoes]);
+    }
+  };
+
+  // Ativar / Desativar Usuário
+  const toggleStatusUsuario = (id: string) => {
+    const user = usuarios.find((u) => u.id === id);
+    if (!user) return;
+    const novoStatus = !user.ativo;
+
+    setUsuarios(
+      usuarios.map((u) => (u.id === id ? { ...u, ativo: novoStatus, updated_at: new Date().toISOString() } : u))
+    );
+
+    const novoLog: AuditoriaPermissao = {
+      id: "aud_" + Math.random().toString(36).substr(2, 9),
+      tenant_id: empresa.id,
+      usuario_alterado_id: id,
+      usuario_alterado_nome: user.nome,
+      alterado_por_id: usuarioLogado.id,
+      alterado_por_nome: usuarioLogado.nome,
+      tipo_alteracao: novoStatus ? "reativacao_usuario" : "desativacao_usuario",
+      detalhes: {
+        motivo: novoStatus ? "Reativação de acesso pelo administrador" : "Desativação de acesso pelo administrador",
+      },
+      registrado_em: new Date().toISOString(),
+    };
+    setAuditoriaPermissoes([novoLog, ...auditoriaPermissoes]);
+  };
+
+  // Definir Exceção de Permissão para Usuário
+  const setUsuarioPermissao = (usuario_id: string, modulo: ModuloSistema, nivel_acesso: NivelPermissao) => {
+    const user = usuarios.find((u) => u.id === usuario_id);
+    const existingIndex = usuarioPermissoes.findIndex(
+      (up) => up.usuario_id === usuario_id && up.modulo === modulo
+    );
+
+    const updatedPermissoes = [...usuarioPermissoes];
+    if (existingIndex >= 0) {
+      updatedPermissoes[existingIndex] = {
+        ...updatedPermissoes[existingIndex],
+        nivel_acesso,
+      };
+    } else {
+      updatedPermissoes.push({
+        id: "up_" + Math.random().toString(36).substr(2, 9),
+        tenant_id: empresa.id,
+        usuario_id,
+        modulo,
+        nivel_acesso,
+      });
+    }
+    setUsuarioPermissoes(updatedPermissoes);
+
+    const novoLog: AuditoriaPermissao = {
+      id: "aud_" + Math.random().toString(36).substr(2, 9),
+      tenant_id: empresa.id,
+      usuario_alterado_id: usuario_id,
+      usuario_alterado_nome: user?.nome,
+      alterado_por_id: usuarioLogado.id,
+      alterado_por_nome: usuarioLogado.nome,
+      tipo_alteracao: "excecao_permissao",
+      detalhes: {
+        modulo,
+        nivel_acesso,
+        tipo: "Ajuste de permissão granular individual",
+      },
+      registrado_em: new Date().toISOString(),
+    };
+    setAuditoriaPermissoes([novoLog, ...auditoriaPermissoes]);
+  };
+
+  // Restaurar Permissões Padrão do Papel
+  const resetUsuarioPermissoes = (usuario_id: string) => {
+    const user = usuarios.find((u) => u.id === usuario_id);
+    setUsuarioPermissoes(usuarioPermissoes.filter((up) => up.usuario_id !== usuario_id));
+
+    const novoLog: AuditoriaPermissao = {
+      id: "aud_" + Math.random().toString(36).substr(2, 9),
+      tenant_id: empresa.id,
+      usuario_alterado_id: usuario_id,
+      usuario_alterado_nome: user?.nome,
+      alterado_por_id: usuarioLogado.id,
+      alterado_por_nome: usuarioLogado.nome,
+      tipo_alteracao: "restauracao_padrao_papel",
+      detalhes: {
+        papel: user?.papel_nome,
+        mensagem: "Todas as exceções foram removidas e o usuário herdou as permissões do papel base.",
+      },
+      registrado_em: new Date().toISOString(),
+    };
+    setAuditoriaPermissoes([novoLog, ...auditoriaPermissoes]);
+  };
 
   // 1. Criar Pedido de Compra
   const addPedidoCompra = (
@@ -667,6 +906,18 @@ export function TextilStoreProvider({ children }: { children: React.ReactNode })
       value={{
         empresa,
         usuarios,
+        papeis,
+        papelPermissoes,
+        usuarioPermissoes,
+        auditoriaPermissoes,
+        usuarioLogado,
+        setUsuarioLogado,
+        addUsuario,
+        updateUsuario,
+        toggleStatusUsuario,
+        setUsuarioPermissao,
+        resetUsuarioPermissoes,
+        getUsuarioPermissoesEfetivas,
         depositos,
         fornecedores,
         itensCatalogo,
