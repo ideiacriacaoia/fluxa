@@ -34,6 +34,7 @@ import {
   EtapaHistoricoOS,
   Pendencia,
   StatusPendencia,
+  HistoricoPendenciaItem,
 } from "@/types/database.types";
 import {
   initialEmpresa,
