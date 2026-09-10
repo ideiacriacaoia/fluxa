@@ -199,8 +199,8 @@ body {
 }
 
 /* ==========================================================================
-   CORREÇÃO GLOBAL DE MODAIS E FORMULÁRIOS PARA TEMAS ESCUROS
-   Garante contraste dinâmico sem fundos brancos residuais ou sombras conflitantes
+   CORREÇÃO GLOBAL DE CARDS, CABEÇALHOS, MODAIS E FORMULÁRIOS
+   Garante contraste perfeito nos 3 temas escuros (Dark Night, Tokyo, IdeIA)
    ========================================================================== */
 
 [data-theme="dark-night"] .bg-white,
@@ -211,34 +211,55 @@ body {
 }
 
 [data-theme="dark-night"] .bg-slate-50,
+[data-theme="dark-night"] .bg-slate-50\/60,
+[data-theme="dark-night"] .bg-slate-50\/50,
 [data-theme="tokyo"] .bg-slate-50,
-[data-theme="ideia"] .bg-slate-50 {
+[data-theme="tokyo"] .bg-slate-50\/60,
+[data-theme="tokyo"] .bg-slate-50\/50,
+[data-theme="ideia"] .bg-slate-50,
+[data-theme="ideia"] .bg-slate-50\/60,
+[data-theme="ideia"] .bg-slate-50\/50 {
   background-color: var(--bg-surface-hover) !important;
   color: var(--text-main) !important;
 }
 
 [data-theme="dark-night"] .bg-slate-100,
+[data-theme="dark-night"] .bg-slate-100\/60,
+[data-theme="dark-night"] .bg-slate-100\/70,
 [data-theme="tokyo"] .bg-slate-100,
-[data-theme="ideia"] .bg-slate-100 {
+[data-theme="tokyo"] .bg-slate-100\/60,
+[data-theme="tokyo"] .bg-slate-100\/70,
+[data-theme="ideia"] .bg-slate-100,
+[data-theme="ideia"] .bg-slate-100\/60,
+[data-theme="ideia"] .bg-slate-100\/70 {
   background-color: var(--bg-surface-hover) !important;
   color: var(--text-muted) !important;
 }
 
 [data-theme="dark-night"] .border-slate-200,
+[data-theme="dark-night"] .border-slate-200\/80,
+[data-theme="dark-night"] .border-slate-200\/90,
 [data-theme="dark-night"] .border-slate-100,
 [data-theme="tokyo"] .border-slate-200,
+[data-theme="tokyo"] .border-slate-200\/80,
+[data-theme="tokyo"] .border-slate-200\/90,
 [data-theme="tokyo"] .border-slate-100,
 [data-theme="ideia"] .border-slate-200,
+[data-theme="ideia"] .border-slate-200\/80,
+[data-theme="ideia"] .border-slate-200\/90,
 [data-theme="ideia"] .border-slate-100 {
   border-color: var(--border-main) !important;
 }
 
+[data-theme="dark-night"] .text-slate-950,
 [data-theme="dark-night"] .text-slate-900,
 [data-theme="dark-night"] .text-slate-800,
 [data-theme="dark-night"] .text-slate-700,
+[data-theme="tokyo"] .text-slate-950,
 [data-theme="tokyo"] .text-slate-900,
 [data-theme="tokyo"] .text-slate-800,
 [data-theme="tokyo"] .text-slate-700,
+[data-theme="ideia"] .text-slate-950,
 [data-theme="ideia"] .text-slate-900,
 [data-theme="ideia"] .text-slate-800,
 [data-theme="ideia"] .text-slate-700 {
@@ -258,6 +279,24 @@ body {
 [data-theme="tokyo"] .text-slate-400,
 [data-theme="ideia"] .text-slate-400 {
   color: var(--text-dim) !important;
+}
+
+/* Badges e destaques leves */
+[data-theme="dark-night"] .bg-sky-50,
+[data-theme="tokyo"] .bg-sky-50,
+[data-theme="ideia"] .bg-sky-50 {
+  background-color: rgba(59, 130, 246, 0.15) !important;
+  color: var(--primary) !important;
+  border-color: rgba(59, 130, 246, 0.3) !important;
+}
+
+[data-theme="dark-night"] .text-sky-800,
+[data-theme="dark-night"] .text-sky-700,
+[data-theme="tokyo"] .text-sky-800,
+[data-theme="tokyo"] .text-sky-700,
+[data-theme="ideia"] .text-sky-800,
+[data-theme="ideia"] .text-sky-700 {
+  color: var(--primary) !important;
 }
 
 /* Modais Dinâmicos */
