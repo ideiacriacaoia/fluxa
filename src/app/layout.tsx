@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { LayoutContainer } from "@/components/layout/layout-container";
+import { ServiceWorkerCleanUp } from "@/components/layout/service-worker-cleanup";
 import { TextilStoreProvider } from "@/lib/store/textil-store";
 
 export const metadata: Metadata = {
@@ -16,6 +17,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" data-theme="padrao">
       <body className="antialiased bg-background text-foreground overflow-hidden">
+        <ServiceWorkerCleanUp />
         <TextilStoreProvider>
           <LayoutContainer>{children}</LayoutContainer>
         </TextilStoreProvider>
