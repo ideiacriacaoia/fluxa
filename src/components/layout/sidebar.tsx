@@ -23,6 +23,9 @@ import {
   Scissors,
   PanelLeftClose,
   PanelLeftOpen,
+  FileText,
+  Receipt,
+  Palette,
 } from "lucide-react";
 import { useTextilStore } from "@/lib/store/textil-store";
 import { cn } from "@/lib/utils";
@@ -38,7 +41,9 @@ const navigation = [
     category: "Compras & Insumos",
     items: [
       { name: "Pedidos de Compra", href: "/compras", icon: ShoppingCart },
+      { name: "Cotações & Comparativo", href: "/compras/cotacoes", icon: FileText },
       { name: "Recebimento & Lotes", href: "/compras/recebimento", icon: PackagePlus },
+      { name: "Central Fiscal / NF-e", href: "/compras/fiscal", icon: Receipt },
     ],
   },
   {
@@ -61,6 +66,7 @@ const navigation = [
     category: "PCP & Chão de Fábrica",
     items: [
       { name: "Ordens de Produção", href: "/producao", icon: Factory },
+      { name: "Personalização / OS", href: "/producao/personalizacao", icon: Palette },
     ],
   },
   {

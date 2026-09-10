@@ -23,6 +23,15 @@ import {
   OrdemProducao,
   OPApontamento,
   OPConsumoRetalho,
+  CotacaoCompra,
+  CotacaoPropostaFornecedor,
+  CotacaoAprovacaoLog,
+  NotaFiscalEletronica,
+  MensagemWhatsAppFornecedor,
+  OrdemServicoPersonalizacao,
+  StatusOSPersonalizacao,
+  ComponentePersonalizacaoItem,
+  EtapaHistoricoOS,
 } from "@/types/database.types";
 import {
   initialEmpresa,
@@ -42,6 +51,10 @@ import {
   initialProdutos,
   initialFichasTecnicas,
   initialOrdensProducao,
+  initialCotacoes,
+  initialNotasFiscais,
+  initialMensagensWhatsApp,
+  initialOrdensPersonalizacao,
 } from "./initial-data";
 
 export type TemaTipo = 'padrao' | 'dark-night' | 'tokyo' | 'ideia';
@@ -67,6 +80,10 @@ interface TextilStoreContextType {
   produtos: Produto[];
   fichasTecnicas: FichaTecnica[];
   ordensProducao: OrdemProducao[];
+  cotacoes: CotacaoCompra[];
+  notasFiscais: NotaFiscalEletronica[];
+  mensagensWhatsApp: MensagemWhatsAppFornecedor[];
+  ordensPersonalizacao: OrdemServicoPersonalizacao[];
 
   // Ações de Tema & Layout
   setTemaAtual: (tema: TemaTipo) => void;
@@ -84,6 +101,80 @@ interface TextilStoreContextType {
   // Ações de Compras & Lotes
   addPedidoCompra: (pedido: Omit<PedidoCompra, "id" | "tenant_id" | "numero_pedido" | "created_at">) => void;
   updateStatusPedidoCompra: (id: string, status: PedidoCompra["status"]) => void;
+
+  // Ações de Cotações Multi-Fornecedor & WhatsApp
+  addCotacao: (cotacao: {
+    titulo: string;
+    item_catalogo_id: string;
+    quantidade_solicitada: number;
+    cor_especificacao?: string;
+    data_limite_resposta: string;
+    margem_comercial_sugerida?: number;
+    fornecedores_ids?: string[];
+  }) => void;
+  addPropostaCotacao: (cotacaoId: string, proposta: {
+    fornecedor_id: string;
+    preco_unitario: number;
+    prazo_entrega_dias: number;
+    tipo_frete: "CIF" | "FOB";
+    valor_frete: number;
+    condicao_pagamento: string;
+    observacoes?: string;
+  }) => void;
+  selecionarPropostaCotacao: (cotacaoId: string, propostaId: string) => void;
+  aprovarCotacao: (cotacaoId: string, parecer: string) => void;
+  converterCotacaoEmPedido: (cotacaoId: string) => void;
+  enviarCotacaoWhatsApp: (cotacaoId: string, fornecedorId: string, mensagem: string) => void;
+
+  // Ações Fiscais (Sefaz / Receita Federal)
+  emitirNotaFiscal: (dados: {
+    tipo: NotaFiscalEletronica["tipo"];
+    natureza_operacao: string;
+    emitente_razao: string;
+    emitente_cnpj: string;
+    destinatario_razao: string;
+    destinatario_doc: string;
+    destinatario_cidade: string;
+    destinatario_uf: string;
+    itens: {
+      codigo_produto: string;
+      descricao: string;
+      ncm: string;
+      cfop: string;
+      unidade: string;
+      quantidade: number;
+      valor_unitario: number;
+      aliquota_icms: number;
+    }[];
+    pedido_origem_id?: string;
+  }) => void;
+  cancelarNotaFiscal: (notaId: string, motivo: string) => void;
+
+  // Ações de Personalização de Peça Pronta (OS)
+  addOrdemPersonalizacao: (os: {
+    cliente_nome: string;
+    cliente_documento: string;
+    cliente_contato?: string;
+    cliente_whatsapp?: string;
+    peca_base_produto_id: string;
+    peca_base_cor: string;
+    peca_base_tamanho_grade: Record<string, number>;
+    componentes: {
+      tipo: OrdemServicoPersonalizacao["componentes"][0]["tipo"];
+      descricao: string;
+      quantidade_por_peca: number;
+      unidade: string;
+      custo_unitario: number;
+      pontos_bordado?: number;
+      tempo_maquina_min?: number;
+      observacoes?: string;
+    }[];
+    margem_lucro_percentual: number;
+    data_previsao_entrega: string;
+    prioridade: "normal" | "alta" | "urgente";
+    observacoes?: string;
+  }) => void;
+  updateStatusOSPersonalizacao: (osId: string, novoStatus: StatusOSPersonalizacao, observacao?: string) => void;
   receberLoteMercadoria: (dados: {
     pedido_compra_id?: string;
     item_pedido_id?: string;
@@ -234,6 +325,10 @@ export function TextilStoreProvider({ children }: { children: React.ReactNode })
   const [produtos, setProdutos] = useState<Produto[]>(initialProdutos);
   const [fichasTecnicas, setFichasTecnicas] = useState<FichaTecnica[]>(initialFichasTecnicas);
   const [ordensProducao, setOrdensProducao] = useState<OrdemProducao[]>(initialOrdensProducao);
+  const [cotacoes, setCotacoes] = useState<CotacaoCompra[]>(initialCotacoes);
+  const [notasFiscais, setNotasFiscais] = useState<NotaFiscalEletronica[]>(initialNotasFiscais);
+  const [mensagensWhatsApp, setMensagensWhatsApp] = useState<MensagemWhatsAppFornecedor[]>(initialMensagensWhatsApp);
+  const [ordensPersonalizacao, setOrdensPersonalizacao] = useState<OrdemServicoPersonalizacao[]>(initialOrdensPersonalizacao);
 
   // Cálculo de permissões efetivas para um usuário
   const getUsuarioPermissoesEfetivas = (usuarioId: string): Record<ModuloSistema, NivelPermissao> => {
@@ -955,6 +1050,458 @@ export function TextilStoreProvider({ children }: { children: React.ReactNode })
     );
   };
 
+  // ============================================================================
+  // COTAÇÕES & COMPRAS MULTI-FORNECEDOR
+  // ============================================================================
+  const addCotacao = (dados: {
+    titulo: string;
+    item_catalogo_id: string;
+    quantidade_solicitada: number;
+    cor_especificacao?: string;
+    data_limite_resposta: string;
+    margem_comercial_sugerida?: number;
+    fornecedores_ids?: string[];
+  }) => {
+    const itemCat = itensCatalogo.find((i) => i.id === dados.item_catalogo_id);
+    const novoCodigo = `COT-2026-${String(cotacoes.length + 1).padStart(3, "0")}`;
+    
+    // Gera propostas iniciais se fornecedores foram selecionados
+    const fornecedoresAlvo = dados.fornecedores_ids && dados.fornecedores_ids.length > 0
+      ? fornecedores.filter((f) => dados.fornecedores_ids?.includes(f.id))
+      : fornecedores.slice(0, 3);
+
+    const propostasIniciais: CotacaoPropostaFornecedor[] = fornecedoresAlvo.map((forn, idx) => ({
+      id: `prop_${Date.now()}_${idx}`,
+      cotacao_id: "",
+      fornecedor_id: forn.id,
+      fornecedor_nome: forn.nome_fantasia || forn.razao_social || forn.nome || "Fornecedor",
+      fornecedor_documento: forn.cnpj_cpf || forn.documento,
+      contato_nome: forn.contato_nome,
+      contato_whatsapp: forn.contato_telefone || forn.telefone,
+      preco_unitario: Number(itemCat?.custo_medio_unitario || 30) * (1 + (idx * 0.05)),
+      valor_total: (Number(itemCat?.custo_medio_unitario || 30) * (1 + (idx * 0.05))) * dados.quantidade_solicitada,
+      prazo_entrega_dias: forn.prazo_medio_entrega_dias || (7 + idx * 2),
+      tipo_frete: idx === 0 ? "CIF" : "FOB",
+      valor_frete: idx === 0 ? 0 : 350,
+      condicao_pagamento: "28/42 DDL",
+      avaliacao_desempenho_fornecedor: forn.avaliacao_nota || 4.5,
+      pontualidade_score: 90 + (idx === 0 ? 5 : -5),
+      qualidade_score: 95,
+      selecionada: idx === 0,
+      status_whatsapp: "nao_enviado",
+    }));
+
+    const precoVencedor = propostasIniciais[0]?.preco_unitario || itemCat?.custo_medio_unitario || 35;
+    const margem = dados.margem_comercial_sugerida || 45;
+    const precoVendaCalculado = Number((precoVencedor / (1 - margem / 100)).toFixed(2));
+
+    const novaCotacao: CotacaoCompra = {
+      id: `cot_${Date.now()}`,
+      codigo: novoCodigo,
+      titulo: dados.titulo,
+      item_catalogo_id: dados.item_catalogo_id,
+      item_codigo: itemCat?.codigo || "ITEM",
+      item_descricao: itemCat?.descricao || "Item",
+      unidade_medida: itemCat?.unidade_medida || "un",
+      quantidade_solicitada: Number(dados.quantidade_solicitada),
+      cor_especificacao: dados.cor_especificacao,
+      data_abertura: new Date().toISOString().split("T")[0],
+      data_limite_resposta: dados.data_limite_resposta,
+      solicitante_id: usuarioLogado.id,
+      solicitante_nome: `${usuarioLogado.nome} (${usuarioLogado.cargo || "Comprador"})`,
+      status: "em_analise",
+      propostas: propostasIniciais,
+      aprovacoes_logs: [],
+      proposta_comercial_vinculada: false,
+      margem_comercial_sugerida: margem,
+      preco_venda_calculado: precoVendaCalculado,
+      economia_estimada: 1200.0,
+      created_at: new Date().toISOString(),
+    };
+
+    setCotacoes([novaCotacao, ...cotacoes]);
+  };
+
+  const addPropostaCotacao = (cotacaoId: string, proposta: {
+    fornecedor_id: string;
+    preco_unitario: number;
+    prazo_entrega_dias: number;
+    tipo_frete: "CIF" | "FOB";
+    valor_frete: number;
+    condicao_pagamento: string;
+    observacoes?: string;
+  }) => {
+    const forn = fornecedores.find((f) => f.id === proposta.fornecedor_id);
+    setCotacoes((prev) =>
+      prev.map((c) => {
+        if (c.id !== cotacaoId) return c;
+        const novaProp: CotacaoPropostaFornecedor = {
+          id: `prop_${Date.now()}`,
+          cotacao_id: cotacaoId,
+          fornecedor_id: proposta.fornecedor_id,
+          fornecedor_nome: forn?.nome_fantasia || forn?.razao_social || "Fornecedor",
+          fornecedor_documento: forn?.cnpj_cpf || forn?.documento,
+          contato_nome: forn?.contato_nome,
+          contato_whatsapp: forn?.contato_telefone || forn?.telefone,
+          preco_unitario: Number(proposta.preco_unitario),
+          valor_total: Number(proposta.preco_unitario) * c.quantidade_solicitada,
+          prazo_entrega_dias: Number(proposta.prazo_entrega_dias),
+          tipo_frete: proposta.tipo_frete,
+          valor_frete: Number(proposta.valor_frete),
+          condicao_pagamento: proposta.condicao_pagamento,
+          avaliacao_desempenho_fornecedor: forn?.avaliacao_nota || 4.5,
+          pontualidade_score: 92,
+          qualidade_score: 95,
+          observacoes: proposta.observacoes,
+          selecionada: c.propostas.length === 0,
+          status_whatsapp: "respondido",
+          data_resposta: new Date().toISOString(),
+        };
+        return {
+          ...c,
+          propostas: [...c.propostas, novaProp],
+        };
+      })
+    );
+  };
+
+  const selecionarPropostaCotacao = (cotacaoId: string, propostaId: string) => {
+    setCotacoes((prev) =>
+      prev.map((c) => {
+        if (c.id !== cotacaoId) return c;
+        const novasPropostas = c.propostas.map((p) => ({
+          ...p,
+          selecionada: p.id === propostaId,
+        }));
+        const propSel = novasPropostas.find((p) => p.id === propostaId);
+        const precoVencedor = propSel?.preco_unitario || 30;
+        const margem = c.margem_comercial_sugerida || 45;
+        const precoVendaCalculado = Number((precoVencedor / (1 - margem / 100)).toFixed(2));
+        
+        return {
+          ...c,
+          propostas: novasPropostas,
+          preco_venda_calculado: precoVendaCalculado,
+        };
+      })
+    );
+  };
+
+  const aprovarCotacao = (cotacaoId: string, parecer: string) => {
+    setCotacoes((prev) =>
+      prev.map((c) => {
+        if (c.id !== cotacaoId) return c;
+        const propSel = c.propostas.find((p) => p.selecionada) || c.propostas[0];
+        const valorTotal = propSel?.valor_total || 0;
+
+        let alcada: "comprador" | "gerente" | "diretor" = "comprador";
+        if (valorTotal > 50000) alcada = "diretor";
+        else if (valorTotal > 10000) alcada = "gerente";
+
+        const novoLog: CotacaoAprovacaoLog = {
+          id: `log_${Date.now()}`,
+          cotacao_id: cotacaoId,
+          usuario_id: usuarioLogado.id,
+          usuario_nome: usuarioLogado.nome,
+          cargo: usuarioLogado.cargo || "Responsável Técnico",
+          alcada,
+          valor_aprovado: valorTotal,
+          data_aprovacao: new Date().toISOString(),
+          parecer: parecer || `Aprovada proposta do fornecedor ${propSel?.fornecedor_nome}`,
+          status: "aprovado",
+        };
+
+        return {
+          ...c,
+          status: "aprovada",
+          aprovacoes_logs: [novoLog, ...c.aprovacoes_logs],
+          proposta_comercial_vinculada: true,
+        };
+      })
+    );
+  };
+
+  const converterCotacaoEmPedido = (cotacaoId: string) => {
+    const cot = cotacoes.find((c) => c.id === cotacaoId);
+    if (!cot) return;
+    const propSel = cot.propostas.find((p) => p.selecionada) || cot.propostas[0];
+    if (!propSel) return;
+
+    const itemCat = itensCatalogo.find((i) => i.id === cot.item_catalogo_id);
+
+    const novoPedidoId = `pc_${Date.now()}`;
+    const novoPedido: PedidoCompra = {
+      id: novoPedidoId,
+      numero_pedido: 2040 + pedidosCompra.length + 1,
+      fornecedor_id: propSel.fornecedor_id,
+      fornecedor_nome: propSel.fornecedor_nome,
+      status: "aprovado",
+      data_emissao: new Date().toISOString().split("T")[0],
+      data_prevista_entrega: new Date(Date.now() + (propSel.prazo_entrega_dias * 86400000)).toISOString().split("T")[0],
+      condicao_pagamento: propSel.condicao_pagamento,
+      valor_total: propSel.valor_total,
+      observacoes: `Gerado automaticamente da Cotação ${cot.codigo}. ${propSel.observacoes || ""}`,
+      created_at: new Date().toISOString(),
+      itens: [
+        {
+          id: `it_${Date.now()}`,
+          pedido_compra_id: novoPedidoId,
+          item_catalogo_id: cot.item_catalogo_id,
+          item_codigo: cot.item_codigo,
+          item_descricao: cot.item_descricao,
+          unidade_medida: cot.unidade_medida,
+          cor_referencia: cot.cor_especificacao || "Padrão",
+          quantidade_pedida: cot.quantidade_solicitada,
+          quantidade_entregue: 0,
+          preco_unitario: propSel.preco_unitario,
+          valor_total: propSel.valor_total,
+        },
+      ],
+    };
+
+    setPedidosCompra([novoPedido, ...pedidosCompra]);
+
+    setCotacoes((prev) =>
+      prev.map((c) =>
+        c.id === cotacaoId
+          ? {
+              ...c,
+              status: "convertida_pedido",
+              pedido_compra_gerado_id: novoPedidoId,
+            }
+          : c
+      )
+    );
+  };
+
+  const enviarCotacaoWhatsApp = (cotacaoId: string, fornecedorId: string, mensagem: string) => {
+    const forn = fornecedores.find((f) => f.id === fornecedorId);
+    const cot = cotacoes.find((c) => c.id === cotacaoId);
+
+    const novaMensagem: MensagemWhatsAppFornecedor = {
+      id: `msg_${Date.now()}`,
+      cotacao_id: cotacaoId,
+      fornecedor_id: fornecedorId,
+      fornecedor_nome: forn?.nome_fantasia || forn?.razao_social || "Fornecedor",
+      telefone_destinatario: forn?.contato_telefone || forn?.telefone || "(47) 99999-0000",
+      remetente: "comprador",
+      conteudo: mensagem || `Solicitação da Cotação ${cot?.codigo}: ${cot?.titulo}. Favor enviar proposta formal.`,
+      data_envio: new Date().toISOString(),
+      status_envio: "enviado",
+      anexo_nome: `${cot?.codigo || "Cotacao"}-Solicitacao.pdf`,
+      anexo_tipo: "cotacao_pdf",
+    };
+
+    setMensagensWhatsApp([novaMensagem, ...mensagensWhatsApp]);
+
+    setCotacoes((prev) =>
+      prev.map((c) => {
+        if (c.id !== cotacaoId) return c;
+        return {
+          ...c,
+          propostas: c.propostas.map((p) =>
+            p.fornecedor_id === fornecedorId
+              ? { ...p, status_whatsapp: "enviado" }
+              : p
+          ),
+        };
+      })
+    );
+  };
+
+  // ============================================================================
+  // INTEGRAÇÃO FISCAL (SEFAZ / RECEITA FEDERAL)
+  // ============================================================================
+  const emitirNotaFiscal = (dados: {
+    tipo: NotaFiscalEletronica["tipo"];
+    natureza_operacao: string;
+    emitente_razao: string;
+    emitente_cnpj: string;
+    destinatario_razao: string;
+    destinatario_doc: string;
+    destinatario_cidade: string;
+    destinatario_uf: string;
+    itens: {
+      codigo_produto: string;
+      descricao: string;
+      ncm: string;
+      cfop: string;
+      unidade: string;
+      quantidade: number;
+      valor_unitario: number;
+      aliquota_icms: number;
+    }[];
+    pedido_origem_id?: string;
+  }) => {
+    const novoNumero = 10520 + notasFiscais.length + 1;
+    const chaveGerada = `422609${Math.random().toString().slice(2, 10)}${Math.random().toString().slice(2, 10)}${Math.random().toString().slice(2, 10)}550010000${novoNumero}10000${novoNumero}`.slice(0, 44);
+    const protocoloGerado = `14226000${Math.random().toString().slice(2, 9)}`;
+
+    const itensCalculados = dados.itens.map((it, idx) => ({
+      id: `nfi_${Date.now()}_${idx}`,
+      ...it,
+      valor_total: Number(it.quantidade) * Number(it.valor_unitario),
+    }));
+
+    const valorProdutos = itensCalculados.reduce((acc, curr) => acc + curr.valor_total, 0);
+    const valorIcms = itensCalculados.reduce((acc, curr) => acc + (curr.valor_total * (curr.aliquota_icms / 100)), 0);
+
+    const novaNota: NotaFiscalEletronica = {
+      id: `nfe_${Date.now()}`,
+      numero_nota: novoNumero,
+      serie: 1,
+      modelo: "55",
+      tipo: dados.tipo,
+      chave_acesso_44: chaveGerada,
+      data_emissao: new Date().toISOString(),
+      status: "autorizada",
+      protocolo_autorizacao: protocoloGerado,
+      codigo_status_sefaz: 100,
+      motivo_status_sefaz: "Autorizado o uso da NF-e (SEFAZ Homologada)",
+      natureza_operacao: dados.natureza_operacao,
+      emitente_razao: dados.emitente_razao,
+      emitente_cnpj: dados.emitente_cnpj,
+      emitente_uf: "SC",
+      destinatario_razao: dados.destinatario_razao,
+      destinatario_doc: dados.destinatario_doc,
+      destinatario_cidade: dados.destinatario_cidade,
+      destinatario_uf: dados.destinatario_uf,
+      valor_produtos: valorProdutos,
+      valor_frete: 0,
+      valor_total_nota: valorProdutos,
+      base_calculo_icms: valorProdutos,
+      valor_icms: Number(valorIcms.toFixed(2)),
+      pedido_origem_id: dados.pedido_origem_id,
+      itens: itensCalculados,
+      xml_conteudo: `<?xml version="1.0" encoding="UTF-8"?><nfeProc versao="4.00" xmlns="http://www.portalfiscal.inf.br/nfe"><NFe><infNFe Id="NFe${chaveGerada}" versao="4.00"><ide><cUF>42</cUF><cNF>${String(novoNumero).padStart(9, '0')}</cNF><natOp>${dados.natureza_operacao}</natOp><mod>55</mod><serie>1</serie><nNF>${novoNumero}</nNF><dhEmi>${new Date().toISOString()}</dhEmi><tpNF>${dados.tipo.startsWith('entrada') ? '0' : '1'}</tpNF></ide><emit><CNPJ>${dados.emitente_cnpj.replace(/[^A-Za-z0-9]/g, '')}</CNPJ><xNome>${dados.emitente_razao}</xNome><UF>SC</UF></emit><dest><CNPJ>${dados.destinatario_doc.replace(/[^A-Za-z0-9]/g, '')}</CNPJ><xNome>${dados.destinatario_razao}</xNome><UF>${dados.destinatario_uf}</UF></dest><total><ICMSTot><vProd>${valorProdutos.toFixed(2)}</vProd><vNF>${valorProdutos.toFixed(2)}</vNF><vICMS>${valorIcms.toFixed(2)}</vICMS></ICMSTot></total></infNFe></NFe><protNFe versao="4.00"><infProt><tpAmb>1</tpAmb><verAplic>SC_NFE_V4_00</verAplic><chNFe>${chaveGerada}</chNFe><dhRecbto>${new Date().toISOString()}</dhRecbto><nProt>${protocoloGerado}</nProt><cStat>100</cStat><xMotivo>Autorizado o uso da NF-e</xMotivo></infProt></protNFe></nfeProc>`,
+      created_at: new Date().toISOString(),
+    };
+
+    setNotasFiscais([novaNota, ...notasFiscais]);
+  };
+
+  const cancelarNotaFiscal = (notaId: string, motivo: string) => {
+    setNotasFiscais((prev) =>
+      prev.map((n) =>
+        n.id === notaId
+          ? {
+              ...n,
+              status: "cancelada",
+              motivo_status_sefaz: `Cancelamento homologado pela SEFAZ: ${motivo}`,
+            }
+          : n
+      )
+    );
+  };
+
+  // ============================================================================
+  // ORDEM DE SERVIÇO (OS) — PERSONALIZAÇÃO DE PEÇA PRONTA
+  // ============================================================================
+  const addOrdemPersonalizacao = (os: {
+    cliente_nome: string;
+    cliente_documento: string;
+    cliente_contato?: string;
+    cliente_whatsapp?: string;
+    peca_base_produto_id: string;
+    peca_base_cor: string;
+    peca_base_tamanho_grade: Record<string, number>;
+    componentes: {
+      tipo: OrdemServicoPersonalizacao["componentes"][0]["tipo"];
+      descricao: string;
+      quantidade_por_peca: number;
+      unidade: string;
+      custo_unitario: number;
+      pontos_bordado?: number;
+      tempo_maquina_min?: number;
+      observacoes?: string;
+    }[];
+    margem_lucro_percentual: number;
+    data_previsao_entrega: string;
+    prioridade: "normal" | "alta" | "urgente";
+    observacoes?: string;
+  }) => {
+    const prod = produtos.find((p) => p.id === os.peca_base_produto_id);
+    const qtdTotal = Object.values(os.peca_base_tamanho_grade).reduce((a, b) => a + Number(b), 0);
+    const custoPecaBaseUnit = Number(prod?.preco_venda_sugerido ? prod.preco_venda_sugerido * 0.45 : 20.0);
+
+    const componentesCalculados: ComponentePersonalizacaoItem[] = os.componentes.map((c, idx) => ({
+      id: `comp_${Date.now()}_${idx}`,
+      ...c,
+      custo_total_por_peca: Number(c.quantidade_por_peca) * Number(c.custo_unitario),
+    }));
+
+    const custoPersonalizacaoUnit = componentesCalculados.reduce((a, b) => a + b.custo_total_por_peca, 0);
+    const custoTotalUnit = custoPecaBaseUnit + custoPersonalizacaoUnit;
+    const custoTotalOS = custoTotalUnit * qtdTotal;
+
+    const margem = os.margem_lucro_percentual || 50;
+    const precoVendaUnitarioSugerido = Number((custoTotalUnit / (1 - margem / 100)).toFixed(2));
+    const valorTotalOS = Number((precoVendaUnitarioSugerido * qtdTotal).toFixed(2));
+
+    const novaOS: OrdemServicoPersonalizacao = {
+      id: `os_${Date.now()}`,
+      numero_os: `OS-2026-${String(ordensPersonalizacao.length + 91).padStart(3, "0")}`,
+      cliente_nome: os.cliente_nome,
+      cliente_documento: os.cliente_documento,
+      cliente_contato: os.cliente_contato,
+      cliente_whatsapp: os.cliente_whatsapp,
+      peca_base_produto_id: os.peca_base_produto_id,
+      peca_base_nome: prod?.nome || "Peça Pronta Acabada",
+      peca_base_referencia: prod?.referencia || "SKU-BASE",
+      peca_base_cor: os.peca_base_cor,
+      peca_base_tamanho_grade: os.peca_base_tamanho_grade,
+      quantidade_total_pecas: qtdTotal,
+      custo_peca_base_unitario: custoPecaBaseUnit,
+      componentes: componentesCalculados,
+      custo_personalizacao_unitario: Number(custoPersonalizacaoUnit.toFixed(2)),
+      custo_total_unitario: Number(custoTotalUnit.toFixed(2)),
+      custo_total_os: Number(custoTotalOS.toFixed(2)),
+      margem_lucro_percentual: margem,
+      preco_venda_unitario_sugerido: precoVendaUnitarioSugerido,
+      valor_total_os: valorTotalOS,
+      data_abertura: new Date().toISOString().split("T")[0],
+      data_previsao_entrega: os.data_previsao_entrega,
+      status: "aguardando_insumos",
+      prioridade: os.prioridade,
+      observacoes: os.observacoes,
+      created_at: new Date().toISOString(),
+      historico_etapas: [
+        {
+          id: `etp_${Date.now()}`,
+          etapa_nome: "Abertura & Separação de Peças Base",
+          data_inicio: new Date().toISOString(),
+          responsavel_nome: usuarioLogado.nome,
+          observacao: `Abertura da OS para ${qtdTotal} unidades de ${prod?.nome}.`,
+          concluida: true,
+        },
+      ],
+    };
+
+    setOrdensPersonalizacao([novaOS, ...ordensPersonalizacao]);
+  };
+
+  const updateStatusOSPersonalizacao = (osId: string, novoStatus: StatusOSPersonalizacao, observacao?: string) => {
+    setOrdensPersonalizacao((prev) =>
+      prev.map((os) => {
+        if (os.id !== osId) return os;
+        const novaEtapa: EtapaHistoricoOS = {
+          id: `etp_${Date.now()}`,
+          etapa_nome: `Mudança de Status: ${novoStatus.toUpperCase()}`,
+          data_inicio: new Date().toISOString(),
+          responsavel_nome: usuarioLogado.nome,
+          observacao: observacao || `Status alterado para ${novoStatus}`,
+          concluida: true,
+        };
+        return {
+          ...os,
+          status: novoStatus,
+          data_entrega_efetiva: novoStatus === "entregue" ? new Date().toISOString().split("T")[0] : os.data_entrega_efetiva,
+          historico_etapas: [novaEtapa, ...os.historico_etapas],
+        };
+      })
+    );
+  };
+
   return (
     <TextilStoreContext.Provider
       value={{
@@ -987,6 +1534,10 @@ export function TextilStoreProvider({ children }: { children: React.ReactNode })
         produtos,
         fichasTecnicas,
         ordensProducao,
+        cotacoes,
+        notasFiscais,
+        mensagensWhatsApp,
+        ordensPersonalizacao,
         addPedidoCompra,
         updateStatusPedidoCompra,
         receberLoteMercadoria,
@@ -1000,6 +1551,16 @@ export function TextilStoreProvider({ children }: { children: React.ReactNode })
         addOrdemProducao,
         updateStatusOP,
         registrarApontamentoOP,
+        addCotacao,
+        addPropostaCotacao,
+        selecionarPropostaCotacao,
+        aprovarCotacao,
+        converterCotacaoEmPedido,
+        enviarCotacaoWhatsApp,
+        emitirNotaFiscal,
+        cancelarNotaFiscal,
+        addOrdemPersonalizacao,
+        updateStatusOSPersonalizacao,
       }}
     >
       {children}

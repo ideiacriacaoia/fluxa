@@ -19,15 +19,52 @@ export function formatNumber(value: number, decimals: number = 2): string {
   }).format(value);
 }
 
+/**
+ * Formata CNPJ ou CPF, com suporte total ao NOVO PADRÃO DE CNPJ ALFANUMÉRICO da Receita Federal
+ * Formatos suportados:
+ * - CNPJ Alfanumérico (14 caracteres alfanuméricos): XX.XXX.XXX/XXXX-XX (ex: 12.ABC.345/0001-90)
+ * - CNPJ Tradicional (14 dígitos): 00.000.000/0000-00
+ * - CPF (11 dígitos): 000.000.000-00
+ */
 export function formatCNPJ(cnpj: string): string {
-  const digits = cnpj.replace(/\D/g, "");
-  if (digits.length === 14) {
-    return digits.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5");
+  if (!cnpj) return "";
+  // Mantém letras e números em maiúsculo, removendo pontuações existentes
+  const clean = cnpj.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+  
+  if (clean.length === 14) {
+    return clean.replace(/^([A-Z0-9]{2})([A-Z0-9]{3})([A-Z0-9]{3})([A-Z0-9]{4})([A-Z0-9]{2})$/, "$1.$2.$3/$4-$5");
   }
-  if (digits.length === 11) {
-    return digits.replace(/(\d{3})(\d{3})(\d{3})/, "$1.$2.$3-$4");
+  if (clean.length === 11 && /^\d+$/.test(clean)) {
+    return clean.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, "$1.$2.$3-$4");
   }
   return cnpj;
+}
+
+/**
+ * Validação de Documento (CPF / CNPJ Tradicional / CNPJ Alfanumérico da RFB)
+ */
+export function validarDocumentoReceita(doc: string): { valido: boolean; tipo: "cnpj_alfanumerico" | "cnpj" | "cpf" | "invalido"; formatado: string } {
+  if (!doc) return { valido: false, tipo: "invalido", formatado: "" };
+  const clean = doc.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+
+  if (clean.length === 14) {
+    const isAlphanumeric = /[A-Z]/.test(clean);
+    return {
+      valido: true,
+      tipo: isAlphanumeric ? "cnpj_alfanumerico" : "cnpj",
+      formatado: formatCNPJ(clean),
+    };
+  }
+
+  if (clean.length === 11 && /^\d+$/.test(clean)) {
+    return {
+      valido: true,
+      tipo: "cpf",
+      formatado: formatCNPJ(clean),
+    };
+  }
+
+  return { valido: false, tipo: "invalido", formatado: doc };
 }
 
 export function formatDate(dateString: string): string {

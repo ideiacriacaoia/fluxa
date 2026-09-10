@@ -765,3 +765,249 @@ export type UsuarioComPermissoes = Usuario & {
   excecoes_permissoes?: UsuarioPermissao[];
   permissoes_efetivas?: Record<ModuloSistema, NivelPermissao>;
 };
+
+// ==============================================================================
+// 7. COTAÇÕES & COMPRAS MULTI-FORNECEDOR
+// ==============================================================================
+
+export type StatusCotacao = 'aberta' | 'em_analise' | 'aprovada' | 'rejeitada' | 'convertida_pedido' | 'cancelada';
+export type StatusWhatsApp = 'nao_enviado' | 'enviado' | 'entregue' | 'lido' | 'respondido';
+export type AlcadaAprovacao = 'comprador' | 'gerente' | 'diretor';
+
+export type CotacaoPropostaFornecedor = {
+  id: string;
+  cotacao_id: string;
+  fornecedor_id: string;
+  fornecedor_nome: string;
+  fornecedor_documento?: string;
+  contato_nome?: string;
+  contato_whatsapp?: string;
+  preco_unitario: number;
+  valor_total: number;
+  prazo_entrega_dias: number;
+  tipo_frete: 'CIF' | 'FOB';
+  valor_frete: number;
+  condicao_pagamento: string;
+  avaliacao_desempenho_fornecedor: number; // 1 a 5
+  pontualidade_score: number; // 0 a 100%
+  qualidade_score: number; // 0 a 100%
+  observacoes?: string;
+  selecionada: boolean;
+  status_whatsapp: StatusWhatsApp;
+  data_resposta?: string;
+  historico_negociacao?: string[];
+};
+
+export type CotacaoAprovacaoLog = {
+  id: string;
+  cotacao_id: string;
+  usuario_id: string;
+  usuario_nome: string;
+  cargo: string;
+  alcada: AlcadaAprovacao;
+  valor_aprovado: number;
+  data_aprovacao: string;
+  parecer: string;
+  status: 'aprovado' | 'rejeitado' | 'pendente';
+};
+
+export type CotacaoCompra = {
+  id: string;
+  tenant_id?: string;
+  codigo: string;
+  titulo: string;
+  item_catalogo_id: string;
+  item_codigo: string;
+  item_descricao: string;
+  unidade_medida: string;
+  quantidade_solicitada: number;
+  cor_especificacao?: string;
+  data_abertura: string;
+  data_limite_resposta: string;
+  solicitante_id: string;
+  solicitante_nome: string;
+  status: StatusCotacao;
+  propostas: CotacaoPropostaFornecedor[];
+  aprovacoes_logs: CotacaoAprovacaoLog[];
+  pedido_compra_gerado_id?: string;
+  proposta_comercial_vinculada?: boolean;
+  margem_comercial_sugerida?: number;
+  preco_venda_calculado?: number;
+  economia_estimada?: number;
+  created_at: string;
+  updated_at?: string;
+};
+
+// ==============================================================================
+// 8. INTEGRAÇÃO FISCAL (SEFAZ / RECEITA FEDERAL)
+// ==============================================================================
+
+export type TipoNotaFiscal = 'entrada_compra' | 'saida_venda' | 'devolucao' | 'remessa_faccao' | 'retorno_faccao';
+export type StatusNotaFiscal = 'autorizada' | 'rejeitada' | 'cancelada' | 'em_processamento' | 'contingencia';
+export type ModeloDocumentoFiscal = '55' | '65'; // 55 = NF-e, 65 = NFC-e
+
+export type ItemNotaFiscal = {
+  id: string;
+  codigo_produto: string;
+  descricao: string;
+  ncm: string;
+  cfop: string;
+  unidade: string;
+  quantidade: number;
+  valor_unitario: number;
+  valor_total: number;
+  aliquota_icms: number;
+  aliquota_ipi?: number;
+  aliquota_pis?: number;
+  aliquota_cofins?: number;
+};
+
+export type NotaFiscalEletronica = {
+  id: string;
+  tenant_id?: string;
+  numero_nota: number;
+  serie: number;
+  modelo: ModeloDocumentoFiscal;
+  tipo: TipoNotaFiscal;
+  chave_acesso_44: string;
+  data_emissao: string;
+  data_saida_entrada?: string;
+  status: StatusNotaFiscal;
+  protocolo_autorizacao?: string;
+  codigo_status_sefaz: number; // ex: 100 = Autorizada, 204 = Duplicidade, etc.
+  motivo_status_sefaz: string;
+  natureza_operacao: string;
+  
+  // Emitente
+  emitente_razao: string;
+  emitente_cnpj: string; // Suporta CNPJ alfanumérico
+  emitente_uf: string;
+  
+  // Destinatário
+  destinatario_razao: string;
+  destinatario_doc: string; // Suporta CNPJ alfanumérico ou CPF
+  destinatario_cidade: string;
+  destinatario_uf: string;
+
+  // Valores
+  valor_produtos: number;
+  valor_frete: number;
+  valor_seguro?: number;
+  valor_desconto?: number;
+  valor_total_nota: number;
+  base_calculo_icms: number;
+  valor_icms: number;
+
+  itens: ItemNotaFiscal[];
+  pedido_origem_id?: string; // ID do pedido de compra ou OS
+  xml_conteudo?: string;
+  created_at: string;
+};
+
+// ==============================================================================
+// 9. WHATSAPP PARA COMPRAS & COTAÇÕES
+// ==============================================================================
+
+export type MensagemWhatsAppFornecedor = {
+  id: string;
+  cotacao_id?: string;
+  pedido_compra_id?: string;
+  fornecedor_id: string;
+  fornecedor_nome: string;
+  telefone_destinatario: string;
+  remetente: 'comprador' | 'fornecedor';
+  conteudo: string;
+  data_envio: string;
+  status_envio: StatusWhatsApp;
+  anexo_nome?: string;
+  anexo_tipo?: 'cotacao_pdf' | 'pedido_pdf' | 'proposta_pdf';
+};
+
+// ==============================================================================
+// 10. ORDEM DE SERVIÇO (OS) — PERSONALIZAÇÃO DE PEÇA PRONTA
+// ==============================================================================
+
+export type TipoComponentePersonalizacao =
+  | 'materia_prima'
+  | 'bordado'
+  | 'tag'
+  | 'etiqueta'
+  | 'silk_dtf'
+  | 'costura_especial'
+  | 'embalagem_especial';
+
+export type StatusOSPersonalizacao =
+  | 'aguardando_insumos'
+  | 'em_producao'
+  | 'aguardando_bordado'
+  | 'acabamento'
+  | 'finalizado'
+  | 'entregue'
+  | 'cancelado';
+
+export type ComponentePersonalizacaoItem = {
+  id: string;
+  tipo: TipoComponentePersonalizacao;
+  descricao: string;
+  item_catalogo_id?: string; // se vier do almoxarifado
+  quantidade_por_peca: number;
+  unidade: string;
+  custo_unitario: number;
+  custo_total_por_peca: number;
+  pontos_bordado?: number; // Para bordado computadorizado
+  tempo_maquina_min?: number;
+  observacoes?: string;
+};
+
+export type EtapaHistoricoOS = {
+  id: string;
+  etapa_nome: string;
+  data_inicio: string;
+  data_conclusao?: string;
+  responsavel_nome: string;
+  observacao?: string;
+  concluida: boolean;
+};
+
+export type OrdemServicoPersonalizacao = {
+  id: string;
+  tenant_id?: string;
+  numero_os: string;
+  cliente_nome: string;
+  cliente_documento: string; // CNPJ Alfanumérico ou CPF
+  cliente_contato?: string;
+  cliente_whatsapp?: string;
+  
+  // Peça Base
+  peca_base_produto_id: string;
+  peca_base_nome: string;
+  peca_base_referencia: string;
+  peca_base_cor: string;
+  peca_base_tamanho_grade: Record<string, number>; // Ex: { P: 10, M: 20, G: 15 }
+  quantidade_total_pecas: number;
+  custo_peca_base_unitario: number;
+
+  // Personalização
+  componentes: ComponentePersonalizacaoItem[];
+  custo_personalizacao_unitario: number;
+  custo_total_unitario: number;
+  custo_total_os: number;
+  
+  // Comercial
+  margem_lucro_percentual: number;
+  preco_venda_unitario_sugerido: number;
+  valor_total_os: number;
+
+  // Prazos e Status
+  data_abertura: string;
+  data_previsao_entrega: string;
+  data_entrega_efetiva?: string;
+  status: StatusOSPersonalizacao;
+  prioridade: 'normal' | 'alta' | 'urgente';
+  historico_etapas: EtapaHistoricoOS[];
+  observacoes?: string;
+  arte_referencia_url?: string;
+  created_at: string;
+  updated_at?: string;
+};
+
