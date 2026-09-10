@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Sidebar } from "@/components/layout/sidebar";
-import { Header } from "@/components/layout/header";
+import { LayoutContainer } from "@/components/layout/layout-container";
 import { TextilStoreProvider } from "@/lib/store/textil-store";
 
 export const metadata: Metadata = {
@@ -16,18 +15,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" data-theme="padrao">
-      <body className="antialiased bg-background text-foreground flex h-screen overflow-hidden">
+      <body className="antialiased bg-background text-foreground overflow-hidden">
         <TextilStoreProvider>
-          {/* Sidebar Retrátil */}
-          <Sidebar />
-
-          {/* Main Content Area */}
-          <div className="flex-1 flex flex-col h-screen overflow-hidden">
-            <Header />
-            <main className="flex-1 overflow-y-auto p-6 bg-background">
-              {children}
-            </main>
-          </div>
+          <LayoutContainer>{children}</LayoutContainer>
         </TextilStoreProvider>
       </body>
     </html>

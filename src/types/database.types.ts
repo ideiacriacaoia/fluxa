@@ -1011,3 +1011,38 @@ export type OrdemServicoPersonalizacao = {
   updated_at?: string;
 };
 
+// ==============================================================================
+// 10. MÓDULO CONTROLE DE PENDÊNCIAS
+// ==============================================================================
+
+export type StatusPendencia = 'aberta' | 'fazendo' | 'fechada';
+
+export type HistoricoPendenciaItem = {
+  id: string;
+  status: StatusPendencia;
+  data: string;
+  usuario_id: string;
+  usuario_nome: string;
+  observacao?: string;
+};
+
+export type Pendencia = {
+  id: string;
+  tenant_id?: string;
+  numero: string; // Ex: PEND-2026-001
+  data_criacao: string;
+  data_prazo?: string; // YYYY-MM-DD
+  hora?: string; // HH:MM
+  informacao: string;
+  criador_id: string;
+  criador_nome: string;
+  responsavel_id: string;
+  responsavel_nome: string;
+  status: StatusPendencia;
+  data_conclusao?: string;
+  observacao_encerramento?: string;
+  historico: HistoricoPendenciaItem[];
+  created_at: string;
+  updated_at?: string;
+};
+

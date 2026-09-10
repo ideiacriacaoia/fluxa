@@ -32,6 +32,8 @@ import {
   StatusOSPersonalizacao,
   ComponentePersonalizacaoItem,
   EtapaHistoricoOS,
+  Pendencia,
+  StatusPendencia,
 } from "@/types/database.types";
 import {
   initialEmpresa,
@@ -55,9 +57,11 @@ import {
   initialNotasFiscais,
   initialMensagensWhatsApp,
   initialOrdensPersonalizacao,
+  initialPendencias,
 } from "./initial-data";
 
 export type TemaTipo = 'padrao' | 'dark-night' | 'tokyo' | 'ideia';
+export type PosicaoMenuTipo = 'lateral' | 'superior';
 
 interface TextilStoreContextType {
   empresa: Empresa;
@@ -69,6 +73,7 @@ interface TextilStoreContextType {
   usuarioLogado: Usuario;
   temaAtual: TemaTipo;
   sidebarRecolhida: boolean;
+  posicaoMenu: PosicaoMenuTipo;
   depositos: Deposito[];
   fornecedores: Fornecedor[];
   itensCatalogo: ItemCatalogo[];
@@ -84,10 +89,34 @@ interface TextilStoreContextType {
   notasFiscais: NotaFiscalEletronica[];
   mensagensWhatsApp: MensagemWhatsAppFornecedor[];
   ordensPersonalizacao: OrdemServicoPersonalizacao[];
+  pendencias: Pendencia[];
 
   // Ações de Tema & Layout
   setTemaAtual: (tema: TemaTipo) => void;
   toggleSidebarRecolhida: () => void;
+  setPosicaoMenu: (posicao: PosicaoMenuTipo) => void;
+
+  // Ações de Pendências
+  addPendencia: (dados: {
+    informacao: string;
+    responsavel_id: string;
+    data_prazo?: string;
+    hora?: string;
+  }) => void;
+  updateStatusPendencia: (
+    pendenciaId: string,
+    novoStatus: StatusPendencia,
+    observacao?: string
+  ) => void;
+  updatePendencia: (
+    pendenciaId: string,
+    dados: {
+      informacao?: string;
+      responsavel_id?: string;
+      data_prazo?: string;
+      hora?: string;
+    }
+  ) => void;
 
   // Ações de Usuários & Permissões
   setUsuarioLogado: (usuario: Usuario) => void;
@@ -268,9 +297,10 @@ export function TextilStoreProvider({ children }: { children: React.ReactNode })
   const [auditoriaPermissoes, setAuditoriaPermissoes] = useState<AuditoriaPermissao[]>(initialAuditoriaPermissoes);
   const [usuarioLogado, setUsuarioLogado] = useState<Usuario>(initialUsuarios[0]);
 
-  // Estados de Tema e Layout Retrátil
+  // Estados de Tema, Layout e Menu
   const [temaAtual, setTemaAtualState] = useState<TemaTipo>("padrao");
   const [sidebarRecolhida, setSidebarRecolhida] = useState<boolean>(false);
+  const [posicaoMenu, setPosicaoMenuState] = useState<PosicaoMenuTipo>("lateral");
 
   // Sincronização inicial com localStorage / DOM
   useEffect(() => {
@@ -286,6 +316,11 @@ export function TextilStoreProvider({ children }: { children: React.ReactNode })
       const savedSidebar = localStorage.getItem("fluxa_sidebar_collapsed");
       if (savedSidebar !== null) {
         setSidebarRecolhida(savedSidebar === "true");
+      }
+
+      const savedPosicaoMenu = localStorage.getItem("fluxa_menu_position") as PosicaoMenuTipo;
+      if (savedPosicaoMenu && ["lateral", "superior"].includes(savedPosicaoMenu)) {
+        setPosicaoMenuState(savedPosicaoMenu);
       }
     } catch {
       // ambiente SSR ou sem suporte a localStorage
@@ -314,6 +349,15 @@ export function TextilStoreProvider({ children }: { children: React.ReactNode })
     });
   };
 
+  const setPosicaoMenu = (novaPosicao: PosicaoMenuTipo) => {
+    setPosicaoMenuState(novaPosicao);
+    try {
+      localStorage.setItem("fluxa_menu_position", novaPosicao);
+    } catch {
+      // fallback
+    }
+  };
+
   const [depositos, setDepositos] = useState<Deposito[]>(initialDepositos);
   const [fornecedores, setFornecedores] = useState<Fornecedor[]>(initialFornecedores);
   const [itensCatalogo, setItensCatalogo] = useState<ItemCatalogo[]>(initialItensCatalogo);
@@ -329,6 +373,7 @@ export function TextilStoreProvider({ children }: { children: React.ReactNode })
   const [notasFiscais, setNotasFiscais] = useState<NotaFiscalEletronica[]>(initialNotasFiscais);
   const [mensagensWhatsApp, setMensagensWhatsApp] = useState<MensagemWhatsAppFornecedor[]>(initialMensagensWhatsApp);
   const [ordensPersonalizacao, setOrdensPersonalizacao] = useState<OrdemServicoPersonalizacao[]>(initialOrdensPersonalizacao);
+  const [pendencias, setPendencias] = useState<Pendencia[]>(initialPendencias);
 
   // Cálculo de permissões efetivas para um usuário
   const getUsuarioPermissoesEfetivas = (usuarioId: string): Record<ModuloSistema, NivelPermissao> => {
@@ -1502,6 +1547,104 @@ export function TextilStoreProvider({ children }: { children: React.ReactNode })
     );
   };
 
+  const addPendencia = (dados: {
+    informacao: string;
+    responsavel_id: string;
+    data_prazo?: string;
+    hora?: string;
+  }) => {
+    const resp = usuarios.find((u) => u.id === dados.responsavel_id);
+    const responsavelNome = resp ? resp.nome : "Colaborador";
+    const novoNum = `PEND-2026-${String(pendencias.length + 1).padStart(3, "0")}`;
+
+    const novaPendencia: Pendencia = {
+      id: `pend_${Date.now()}`,
+      numero: novoNum,
+      data_criacao: new Date().toISOString(),
+      data_prazo: dados.data_prazo,
+      hora: dados.hora,
+      informacao: dados.informacao,
+      criador_id: usuarioLogado.id,
+      criador_nome: usuarioLogado.nome,
+      responsavel_id: dados.responsavel_id,
+      responsavel_nome: responsavelNome,
+      status: "aberta",
+      historico: [
+        {
+          id: `h_${Date.now()}`,
+          status: "aberta",
+          data: new Date().toISOString(),
+          usuario_id: usuarioLogado.id,
+          usuario_nome: usuarioLogado.nome,
+          observacao: `Pendência criada e atribuída para ${responsavelNome}.`,
+        },
+      ],
+      created_at: new Date().toISOString(),
+    };
+
+    setPendencias([novaPendencia, ...pendencias]);
+  };
+
+  const updateStatusPendencia = (
+    pendenciaId: string,
+    novoStatus: StatusPendencia,
+    observacao?: string
+  ) => {
+    setPendencias((prev) =>
+      prev.map((p) => {
+        if (p.id !== pendenciaId) return p;
+        const now = new Date().toISOString();
+        const novoHistItem: HistoricoPendenciaItem = {
+          id: `h_${Date.now()}`,
+          status: novoStatus,
+          data: now,
+          usuario_id: usuarioLogado.id,
+          usuario_nome: usuarioLogado.nome,
+          observacao: observacao || `Status alterado para ${novoStatus.toUpperCase()}`,
+        };
+
+        return {
+          ...p,
+          status: novoStatus,
+          data_conclusao: novoStatus === "fechada" ? now : p.data_conclusao,
+          observacao_encerramento:
+            novoStatus === "fechada" ? (observacao || p.observacao_encerramento) : p.observacao_encerramento,
+          historico: [...p.historico, novoHistItem],
+          updated_at: now,
+        };
+      })
+    );
+  };
+
+  const updatePendencia = (
+    pendenciaId: string,
+    dados: {
+      informacao?: string;
+      responsavel_id?: string;
+      data_prazo?: string;
+      hora?: string;
+    }
+  ) => {
+    setPendencias((prev) =>
+      prev.map((p) => {
+        if (p.id !== pendenciaId) return p;
+        const resp = dados.responsavel_id ? usuarios.find((u) => u.id === dados.responsavel_id) : null;
+        const respNome = resp ? resp.nome : p.responsavel_nome;
+        const now = new Date().toISOString();
+
+        return {
+          ...p,
+          informacao: dados.informacao ?? p.informacao,
+          responsavel_id: dados.responsavel_id ?? p.responsavel_id,
+          responsavel_nome: respNome,
+          data_prazo: dados.data_prazo ?? p.data_prazo,
+          hora: dados.hora ?? p.hora,
+          updated_at: now,
+        };
+      })
+    );
+  };
+
   return (
     <TextilStoreContext.Provider
       value={{
@@ -1514,8 +1657,10 @@ export function TextilStoreProvider({ children }: { children: React.ReactNode })
         usuarioLogado,
         temaAtual,
         sidebarRecolhida,
+        posicaoMenu,
         setTemaAtual,
         toggleSidebarRecolhida,
+        setPosicaoMenu,
         setUsuarioLogado,
         addUsuario,
         updateUsuario,
@@ -1538,6 +1683,10 @@ export function TextilStoreProvider({ children }: { children: React.ReactNode })
         notasFiscais,
         mensagensWhatsApp,
         ordensPersonalizacao,
+        pendencias,
+        addPendencia,
+        updateStatusPendencia,
+        updatePendencia,
         addPedidoCompra,
         updateStatusPedidoCompra,
         receberLoteMercadoria,

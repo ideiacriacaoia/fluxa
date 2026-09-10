@@ -26,6 +26,7 @@ import {
   FileText,
   Receipt,
   Palette,
+  ClipboardCheck,
 } from "lucide-react";
 import { useTextilStore } from "@/lib/store/textil-store";
 import { cn } from "@/lib/utils";
@@ -72,6 +73,7 @@ const navigation = [
   {
     category: "Cadastros Base",
     items: [
+      { name: "Controle de Pendências", href: "/cadastros/pendencias", icon: ClipboardCheck },
       { name: "Fornecedores & Facções", href: "/cadastros/fornecedores", icon: Building2 },
       { name: "Catálogo de Insumos", href: "/cadastros/insumos", icon: Tags },
       { name: "Depósitos", href: "/cadastros/depositos", icon: Warehouse },
