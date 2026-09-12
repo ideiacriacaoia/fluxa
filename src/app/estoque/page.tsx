@@ -62,11 +62,11 @@ export default function EstoqueSaldosPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <Boxes className="w-5 h-5 text-sky-600" />
-            Estoque & Almoxarifado (Multi-Depósito)
+          <h1 className="text-xl font-bold text-text-main flex items-center gap-2">
+            <Boxes className="w-5 h-5 text-brand-primary" />
+            Saldos de Estoque & Almoxarifado
           </h1>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-text-muted">
             Visão consolidada de saldos de matéria-prima (por lote) e produtos acabados (por grade).
           </p>
         </div>
@@ -74,23 +74,23 @@ export default function EstoqueSaldosPage() {
         <div className="flex items-center gap-3">
           <Link
             href="/estoque/retalhos"
-            className="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-900 rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-colors"
+            className="px-3.5 py-2 bg-accent-gold/10 hover:bg-accent-gold/20 border border-accent-gold/30 text-accent-gold rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-colors"
           >
-            <Scissors className="w-4 h-4 text-amber-600" />
+            <Scissors className="w-4 h-4 text-accent-gold" />
             Estoque de Retalhos
           </Link>
           <Link
             href="/estoque/lotes"
-            className="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-colors"
+            className="px-3.5 py-2 bg-surface hover:bg-surface-hover border border-border-main text-text-main rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-colors"
           >
-            <QrCode className="w-4 h-4 text-sky-600" />
+            <QrCode className="w-4 h-4 text-brand-primary" />
             Rastreio de Lotes
           </Link>
           <Link
             href="/estoque/movimentacoes"
-            className="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-colors"
+            className="px-3.5 py-2 bg-surface hover:bg-surface-hover border border-border-main text-text-main rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-colors"
           >
-            <History className="w-4 h-4 text-indigo-600" />
+            <History className="w-4 h-4 text-brand-primary" />
             Auditoria / Ledger
           </Link>
         </div>
@@ -108,22 +108,22 @@ export default function EstoqueSaldosPage() {
               onClick={() => setFiltroDeposito(dep.id)}
               className={`p-4 rounded-xl border transition-all cursor-pointer ${
                 filtroDeposito === dep.id
-                  ? "bg-sky-50/60 border-sky-400 shadow-xs"
-                  : "bg-white border-slate-200 hover:border-slate-300"
+                  ? "bg-brand-primary/10 border-brand-primary shadow-xs"
+                  : "bg-surface border-border-main hover:border-brand-primary/50"
               }`}
             >
               <div className="flex items-center justify-between">
-                <span className="font-mono text-xs font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded">
+                <span className="font-mono text-xs font-bold text-brand-primary bg-brand-primary/10 px-2 py-0.5 rounded border border-brand-primary/20">
                   {dep.codigo}
                 </span>
-                <span className="text-[10px] uppercase font-semibold text-slate-400">
+                <span className="text-[10px] uppercase font-semibold text-text-dim">
                   {dep.tipo.replace("_", " ")}
                 </span>
               </div>
-              <h3 className="font-bold text-xs text-slate-800 mt-2 truncate">{dep.nome}</h3>
-              <div className="flex items-baseline justify-between mt-2 pt-2 border-t border-slate-100">
-                <span className="text-[11px] text-slate-500">Saldo Consolidado</span>
-                <span className="text-sm font-bold text-slate-900">
+              <h3 className="font-bold text-xs text-text-main mt-2 truncate">{dep.nome}</h3>
+              <div className="flex items-baseline justify-between mt-2 pt-2 border-t border-border-subtle">
+                <span className="text-[11px] text-text-muted">Saldo Consolidado</span>
+                <span className="text-sm font-bold text-text-main font-mono">
                   {formatNumber(totalItens, 1)}
                 </span>
               </div>
@@ -133,24 +133,24 @@ export default function EstoqueSaldosPage() {
       </div>
 
       {/* Filters Bar */}
-      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-surface p-4 rounded-xl border border-border-main shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="relative flex-1">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-text-dim absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             placeholder="Buscar por descrição de tecido, lote, código ou SKU..."
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
-            className="w-full pl-9 pr-4 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
+            className="w-full pl-9 pr-4 py-1.5 bg-surface-hover border border-border-main rounded-lg text-xs text-text-main focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary"
           />
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-500 font-medium">Depósito:</span>
+          <span className="text-xs text-text-muted font-medium">Depósito:</span>
           <select
             value={filtroDeposito}
             onChange={(e) => setFiltroDeposito(e.target.value)}
-            className="bg-slate-50 border border-slate-200 text-xs rounded-lg px-3 py-1.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+            className="bg-surface-hover border border-border-main text-xs rounded-lg px-3 py-1.5 text-text-main focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
           >
             <option value="todos">Todos os Depósitos</option>
             {depositos.map((d) => (
@@ -163,10 +163,10 @@ export default function EstoqueSaldosPage() {
       </div>
 
       {/* Stock Table */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-surface rounded-xl border border-border-main shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 text-slate-600 border-b border-slate-200">
+            <thead className="bg-surface-hover text-text-muted border-b border-border-main">
               <tr>
                 <th className="py-3 px-4 font-semibold">Depósito</th>
                 <th className="py-3 px-4 font-semibold">Tipo</th>
@@ -178,21 +178,21 @@ export default function EstoqueSaldosPage() {
                 <th className="py-3 px-4 font-semibold text-center">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 text-slate-700">
+            <tbody className="divide-y divide-border-subtle text-text-main">
               {saldosFiltrados.map((s) => {
                 const disponivel = s.quantidade_atual - (s.quantidade_reservada || 0);
 
                 return (
-                  <tr key={s.id} className="hover:bg-slate-50/50 transition-colors">
+                  <tr key={s.id} className="hover:bg-surface-hover/50 transition-colors">
                     <td className="py-3 px-4">
-                      <span className="font-semibold text-slate-800">{s.deposito_nome}</span>
+                      <span className="font-semibold text-text-main">{s.deposito_nome}</span>
                     </td>
                     <td className="py-3 px-4">
                       <span
                         className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase ${
                           s.lote_id
-                            ? "bg-sky-50 text-sky-700 border border-sky-200"
-                            : "bg-purple-50 text-purple-700 border border-purple-200"
+                            ? "bg-brand-primary/10 text-brand-primary border border-brand-primary/20"
+                            : "bg-accent-gold/10 text-accent-gold border border-accent-gold/20"
                         }`}
                       >
                         {s.lote_id ? "Matéria-Prima" : "Produto Acabado"}
@@ -201,32 +201,32 @@ export default function EstoqueSaldosPage() {
                     <td className="py-3 px-4">
                       {s.lote_id ? (
                         <div>
-                          <strong className="text-slate-900">{s.item_codigo}</strong> - {s.item_descricao}
+                          <strong className="text-text-main">{s.item_codigo}</strong> - {s.item_descricao}
                         </div>
                       ) : (
                         <div>
-                          <strong className="text-slate-900">{s.produto_referencia}</strong> - {s.produto_nome}
+                          <strong className="text-text-main">{s.produto_referencia}</strong> - {s.produto_nome}
                         </div>
                       )}
                     </td>
                     <td className="py-3 px-4">
                       {s.codigo_lote ? (
-                        <span className="font-mono text-xs font-bold text-sky-800 bg-sky-50/60 px-2 py-0.5 rounded border border-sky-200">
+                        <span className="font-mono text-xs font-bold text-brand-primary bg-brand-primary/10 px-2 py-0.5 rounded border border-brand-primary/20">
                           {s.codigo_lote} ({s.cor_nome || "-"})
                         </span>
                       ) : (
-                        <span className="font-mono text-xs text-slate-700 bg-slate-100 px-2 py-0.5 rounded">
+                        <span className="font-mono text-xs text-text-muted bg-surface-hover px-2 py-0.5 rounded border border-border-main">
                           Grade: {s.cor_nome} / {s.tamanho} (SKU: {s.sku})
                         </span>
                       )}
                     </td>
-                    <td className="py-3 px-4 text-right font-bold text-slate-900">
+                    <td className="py-3 px-4 text-right font-bold text-text-main font-mono">
                       {formatNumber(s.quantidade_atual, 1)} {s.unidade_medida}
                     </td>
-                    <td className="py-3 px-4 text-right text-amber-600 font-semibold">
+                    <td className="py-3 px-4 text-right text-status-warning font-semibold font-mono">
                       {formatNumber(s.quantidade_reservada || 0, 1)} {s.unidade_medida}
                     </td>
-                    <td className="py-3 px-4 text-right font-bold text-emerald-600">
+                    <td className="py-3 px-4 text-right font-bold text-status-success font-mono">
                       {formatNumber(disponivel, 1)} {s.unidade_medida}
                     </td>
                     <td className="py-3 px-4 text-center">
@@ -235,7 +235,7 @@ export default function EstoqueSaldosPage() {
                           setSaldoParaAjuste(s);
                           setModalAjuste(true);
                         }}
-                        className="px-2.5 py-1 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 font-semibold rounded text-[11px] transition-colors"
+                        className="px-2.5 py-1 bg-surface hover:bg-surface-hover border border-border-main text-text-main font-semibold rounded text-[11px] transition-colors"
                       >
                         Ajustar / Inventário
                       </button>
@@ -250,43 +250,43 @@ export default function EstoqueSaldosPage() {
 
       {/* Modal Ajuste de Inventário com Auditoria */}
       {modalAjuste && saldoParaAjuste && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-amber-600" />
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-surface rounded-2xl max-w-md w-full p-6 shadow-2xl border border-border-main space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-border-subtle">
+              <h2 className="text-base font-bold text-text-main flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-status-warning" />
                 Ajuste de Estoque / Inventário
               </h2>
               <button
                 onClick={() => setModalAjuste(false)}
-                className="text-slate-400 hover:text-slate-600 text-sm font-semibold"
+                className="text-text-dim hover:text-text-main text-sm font-semibold"
               >
                 ✕
               </button>
             </div>
 
             <form onSubmit={handleSalvarAjuste} className="space-y-4 text-xs">
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+              <div className="p-3 bg-surface-hover rounded-xl border border-border-main space-y-1">
                 <div>
-                  <span className="text-slate-400">Depósito: </span>
-                  <strong className="text-slate-800">{saldoParaAjuste.deposito_nome}</strong>
+                  <span className="text-text-dim">Depósito: </span>
+                  <strong className="text-text-main">{saldoParaAjuste.deposito_nome}</strong>
                 </div>
                 <div>
-                  <span className="text-slate-400">Item/Lote: </span>
-                  <strong className="text-slate-900">
+                  <span className="text-text-dim">Item/Lote: </span>
+                  <strong className="text-text-main">
                     {saldoParaAjuste.codigo_lote || saldoParaAjuste.sku || saldoParaAjuste.item_descricao}
                   </strong>
                 </div>
                 <div>
-                  <span className="text-slate-400">Saldo Atual: </span>
-                  <strong className="text-slate-900">
+                  <span className="text-text-dim">Saldo Atual: </span>
+                  <strong className="text-text-main font-mono">
                     {formatNumber(saldoParaAjuste.quantidade_atual, 1)} {saldoParaAjuste.unidade_medida}
                   </strong>
                 </div>
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
+                <label className="block font-semibold text-text-main mb-1">
                   Quantidade a Ajustar (+ entrada ou - perda/ajuste) *
                 </label>
                 <input
@@ -295,13 +295,13 @@ export default function EstoqueSaldosPage() {
                   placeholder="Ex: -5 ou 10"
                   value={qtdAjuste}
                   onChange={(e) => setQtdAjuste(Number(e.target.value))}
-                  className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-900"
+                  className="w-full p-2 bg-surface-hover border border-border-main rounded-lg text-xs font-bold text-text-main font-mono focus:ring-2 focus:ring-brand-primary/20"
                   required
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
+                <label className="block font-semibold text-text-main mb-1">
                   Motivo do Ajuste (Obrigatório para Auditoria) *
                 </label>
                 <input
@@ -309,22 +309,22 @@ export default function EstoqueSaldosPage() {
                   placeholder="Ex: Contagem de inventário cíclico, perda por corte..."
                   value={motivoAjuste}
                   onChange={(e) => setMotivoAjuste(e.target.value)}
-                  className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs"
+                  className="w-full p-2 bg-surface-hover border border-border-main rounded-lg text-xs text-text-main focus:ring-2 focus:ring-brand-primary/20"
                   required
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-border-subtle">
                 <button
                   type="button"
                   onClick={() => setModalAjuste(false)}
-                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-semibold"
+                  className="px-4 py-2 bg-surface-hover hover:bg-border-main text-text-main rounded-lg font-semibold transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg font-semibold"
+                  className="px-4 py-2 bg-brand-primary hover:bg-brand-hover text-brand-foreground rounded-lg font-semibold transition-colors"
                 >
                   Confirmar e Gravar no Ledger
                 </button>

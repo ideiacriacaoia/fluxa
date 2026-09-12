@@ -22,7 +22,7 @@ import {
   UserCheck,
 } from "lucide-react";
 import { useTextilStore } from "@/lib/store/textil-store";
-import { formatDate, formatNumber, formatBRL } from "@/lib/utils";
+import { formatDate, formatNumber, formatBRL, cn } from "@/lib/utils";
 import { OrdemProducao, OPApontamento } from "@/types/database.types";
 
 export default function ProducaoPCPPage() {
@@ -41,6 +41,7 @@ export default function ProducaoPCPPage() {
 
   const [busca, setBusca] = useState("");
   const [modalNovaOP, setModalNovaOP] = useState(false);
+  const [etapaNovaOP, setEtapaNovaOP] = useState<1 | 2 | 3>(1);
   const [opParaApontamento, setOpParaApontamento] = useState<OrdemProducao | null>(null);
 
   // Form State para Nova OP (PRD v2: Origem Híbrida, Modo de Corte, Etapas Mistas)
@@ -150,6 +151,7 @@ export default function ProducaoPCPPage() {
     });
 
     setModalNovaOP(false);
+    setEtapaNovaOP(1);
     setGradeQuantidades({});
     setNumeroPedidoVenda("");
     setClienteNome("");
@@ -184,59 +186,57 @@ export default function ProducaoPCPPage() {
   };
 
   const colunasKanban: { id: OrdemProducao["status"]; title: string; color: string; badge: string }[] = [
-    { id: "planejada", title: "1. Planejadas", color: "border-slate-300", badge: "bg-slate-100 text-slate-700" },
-    { id: "em_corte", title: "2. Em Corte / Enfesto", color: "border-amber-400", badge: "bg-amber-100 text-amber-800" },
-    { id: "em_costura", title: "3. Em Costura / Facção", color: "border-blue-400", badge: "bg-blue-100 text-blue-800" },
-    { id: "em_acabamento", title: "4. Acabamento & Revisão", color: "border-purple-400", badge: "bg-purple-100 text-purple-800" },
-    { id: "finalizada", title: "5. Finalizadas (Estoque PA)", color: "border-emerald-400", badge: "bg-emerald-100 text-emerald-800" },
+    { id: "planejada", title: "1. Planejadas", color: "border-border-main", badge: "bg-surface text-text-muted" },
+    { id: "em_corte", title: "2. Em Corte / Enfesto", color: "border-amber-400", badge: "bg-amber-500/15 text-amber-400" },
+    { id: "em_costura", title: "3. Em Costura / Facção", color: "border-brand-primary", badge: "bg-brand-primary/15 text-brand-primary" },
+    { id: "em_acabamento", title: "4. Acabamento & Revisão", color: "border-purple-400", badge: "bg-purple-500/15 text-purple-400" },
+    { id: "finalizada", title: "5. Finalizadas (Estoque PA)", color: "border-emerald-400", badge: "bg-emerald-500/15 text-emerald-400" },
   ];
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Header com 1 ação primária de destaque */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="bg-sky-500/20 text-sky-800 text-[11px] font-semibold px-2 py-0.5 rounded border border-sky-500/30">
-              PRD v2: Operação Real Validada
-            </span>
-          </div>
-          <h1 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <Factory className="w-5 h-5 text-sky-600" />
+          <h1 className="text-xl font-bold text-text-main flex items-center gap-2">
+            <Factory className="w-5 h-5 text-brand-primary" />
             PCP & Chão de Fábrica (Ordens de Produção)
           </h1>
-          <p className="text-xs text-slate-500">
-            Acompanhe OPs sob encomenda ou para estoque, modos de corte (enfesto/peça a peça) e etapas internas ou por facção.
+          <p className="text-xs text-text-muted mt-0.5">
+            Acompanhe OPs sob encomenda ou para estoque, modos de corte e etapas de confecção.
           </p>
         </div>
 
         <button
-          onClick={() => setModalNovaOP(true)}
-          className="px-3.5 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-colors"
+          onClick={() => {
+            setEtapaNovaOP(1);
+            setModalNovaOP(true);
+          }}
+          className="px-4 py-2 bg-brand-primary hover:bg-brand-primary-hover text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           Abrir Nova OP
         </button>
       </div>
 
-      {/* Kanban Board */}
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      {/* Kanban Board Limpo e Escaneável */}
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-3.5">
         {colunasKanban.map((col) => {
           const opsNaColuna = ordensProducao.filter((op) => op.status === col.id);
 
           return (
             <div
               key={col.id}
-              className={`bg-slate-100/70 rounded-xl p-3 border-t-4 ${col.color} flex flex-col space-y-3 min-h-[620px]`}
+              className={`bg-surface rounded-2xl p-3.5 border-t-4 ${col.color} border border-border-main flex flex-col space-y-3 min-h-[580px] shadow-xs`}
             >
               <div className="flex items-center justify-between px-1">
-                <span className="text-xs font-bold text-slate-800">{col.title}</span>
-                <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${col.badge}`}>
+                <span className="text-xs font-bold text-text-main">{col.title}</span>
+                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${col.badge}`}>
                   {opsNaColuna.length}
                 </span>
               </div>
 
-              <div className="space-y-3 flex-1 overflow-y-auto">
+              <div className="space-y-2.5 flex-1 overflow-y-auto">
                 {opsNaColuna.map((op) => {
                   const progresso = Math.round(
                     ((op.quantidade_produzida || 0) / (op.quantidade_planejada || 1)) * 100
@@ -245,34 +245,33 @@ export default function ProducaoPCPPage() {
                   return (
                     <div
                       key={op.id}
-                      className="bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-xs hover:border-slate-300 transition-all space-y-2.5"
+                      className="bg-surface-hover/70 p-3 rounded-xl border border-border-subtle hover:border-brand-primary/40 transition-all space-y-2"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="font-mono text-xs font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded">
+                        <span className="font-mono text-[11px] font-bold text-text-main bg-surface px-2 py-0.5 rounded border border-border-main">
                           OP #{op.numero_op}
                         </span>
-                        <span className="text-[11px] font-bold text-slate-700">
+                        <span className="text-[11px] font-bold text-text-main font-mono">
                           {op.quantidade_planejada} pçs
                         </span>
                       </div>
 
                       <div>
-                        <h4 className="text-xs font-bold text-slate-900 leading-tight">
+                        <h4 className="text-xs font-bold text-text-main leading-tight line-clamp-1">
                           {op.produto_nome}
                         </h4>
-                        <span className="text-[11px] text-slate-500 font-mono">
+                        <span className="text-[10px] text-text-dim font-mono">
                           Ref: {op.produto_referencia}
                         </span>
                       </div>
 
-                      {/* Badges de Operação Real (PRD v2) */}
+                      {/* Badges de Operação */}
                       <div className="flex flex-wrap gap-1">
-                        {/* Origem */}
                         <span
-                          className={`text-[10px] font-semibold px-1.5 py-0.5 rounded flex items-center gap-1 ${
+                          className={`text-[9px] font-semibold px-1.5 py-0.2 rounded flex items-center gap-1 ${
                             op.origem === "pedido_venda"
-                              ? "bg-purple-50 text-purple-700 border border-purple-200"
-                              : "bg-blue-50 text-blue-700 border border-blue-200"
+                              ? "bg-purple-500/10 text-purple-400 border border-purple-500/20"
+                              : "bg-brand-primary/10 text-brand-primary border border-brand-primary/20"
                           }`}
                         >
                           <ShoppingBag className="w-2.5 h-2.5" />
@@ -281,55 +280,30 @@ export default function ProducaoPCPPage() {
                             : "Estoque"}
                         </span>
 
-                        {/* Modo de Corte */}
-                        <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 flex items-center gap-1">
-                          <Scissors className="w-2.5 h-2.5" />
-                          {op.modo_corte === "enfesto" ? "Enfesto" : "Peça a Peça"}
+                        <span className="text-[9px] font-semibold px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                          {op.modo_corte === "enfesto" ? "Enfesto" : "Pç a Pç"}
                         </span>
-
-                        {/* Execução de Costura */}
-                        {op.etapas_execucao?.costura && (
-                          <span
-                            className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${
-                              op.etapas_execucao.costura.tipo === "faccao"
-                                ? "bg-indigo-50 text-indigo-700 border border-indigo-200"
-                                : "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                            }`}
-                          >
-                            {op.etapas_execucao.costura.tipo === "faccao"
-                              ? `Facção: ${op.etapas_execucao.costura.terceirizado_nome || "Ext"}`
-                              : "Costura Interna"}
-                          </span>
-                        )}
                       </div>
 
-                      {/* Lotes / Retalhos consumidos */}
-                      {op.consumos && op.consumos.length > 0 && (
-                        <div className="text-[10px] text-slate-500 bg-slate-50 p-1.5 rounded border border-slate-100 flex items-center gap-1 truncate">
-                          <QrCode className="w-3 h-3 text-sky-600 flex-shrink-0" />
-                          <span className="truncate">{op.consumos[0].codigo_lote}</span>
-                        </div>
-                      )}
-
                       {/* Progress Bar */}
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between text-[10px] text-slate-500">
-                          <span>Produzido</span>
-                          <span className="font-bold text-slate-700">
+                      <div className="space-y-1 pt-1">
+                        <div className="flex items-center justify-between text-[10px] text-text-dim">
+                          <span>Progresso</span>
+                          <span className="font-bold text-text-main font-mono">
                             {op.quantidade_produzida}/{op.quantidade_planejada} ({progresso}%)
                           </span>
                         </div>
-                        <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                        <div className="w-full bg-border-main/50 rounded-full h-1.5 overflow-hidden">
                           <div
-                            className="bg-sky-600 h-1.5 rounded-full"
+                            className="bg-brand-primary h-1.5 rounded-full transition-all"
                             style={{ width: `${progresso}%` }}
-                          ></div>
+                          />
                         </div>
                       </div>
 
                       {/* Action Button */}
-                      <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
-                        <span className="text-[10px] text-slate-400">
+                      <div className="pt-2 border-t border-border-subtle flex items-center justify-between">
+                        <span className="text-[10px] text-text-dim">
                           {formatDate(op.data_fim_prevista || "")}
                         </span>
 
@@ -348,9 +322,9 @@ export default function ProducaoPCPPage() {
                               setEtapaApontamento("embalagem");
                             }
                           }}
-                          className="px-2.5 py-1 bg-sky-50 hover:bg-sky-100 text-sky-700 font-semibold rounded text-[11px] transition-colors"
+                          className="px-2.5 py-1 bg-brand-primary/10 hover:bg-brand-primary/20 text-brand-primary font-semibold rounded-lg text-[10px] transition-colors cursor-pointer"
                         >
-                          Apontamento
+                          Apontar
                         </button>
                       </div>
                     </div>
@@ -362,196 +336,222 @@ export default function ProducaoPCPPage() {
         })}
       </div>
 
-      {/* Modal Nova Ordem de Produção (PRD v2 Completo) */}
+      {/* Modal Nova Ordem de Produção (Dividido em 3 Etapas Limpas) */}
       {modalNovaOP && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-3xl w-full p-6 shadow-xl border border-slate-200 space-y-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-surface rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-border-main space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-border-subtle">
               <div>
-                <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                  <Factory className="w-5 h-5 text-sky-600" />
+                <h2 className="text-base font-bold text-text-main flex items-center gap-2">
+                  <Factory className="w-5 h-5 text-brand-primary" />
                   Abertura de Ordem de Produção (OP)
                 </h2>
-                <p className="text-xs text-slate-500">
-                  Configure a origem (encomenda vs estoque), modo de corte e mão de obra por etapa.
-                </p>
+                <span className="text-[11px] text-text-dim">
+                  Etapa {etapaNovaOP} de 3 —{" "}
+                  {etapaNovaOP === 1
+                    ? "Origem & Produto"
+                    : etapaNovaOP === 2
+                    ? "Grade de Tamanhos"
+                    : "Insumos & Facção"}
+                </span>
               </div>
               <button
                 onClick={() => setModalNovaOP(false)}
-                className="text-slate-400 hover:text-slate-600 text-sm font-semibold"
+                className="text-text-dim hover:text-text-main text-sm font-semibold p-1"
               >
                 ✕
               </button>
             </div>
 
             <form onSubmit={handleSalvarNovaOP} className="space-y-4 text-xs">
-              {/* Section 1: Origem & Dados Básicos */}
-              <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
-                <span className="font-bold text-slate-800 block text-xs">
-                  1. Origem da Ordem de Produção
-                </span>
+              {/* ETAPA 1: Origem & Produto */}
+              {etapaNovaOP === 1 && (
+                <div className="space-y-3.5 animate-in fade-in duration-150">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-semibold text-text-main mb-1">Tipo de Origem *</label>
+                      <select
+                        value={origemOP}
+                        onChange={(e: any) => setOrigemOP(e.target.value)}
+                        className="w-full p-2 bg-surface-hover/70 border border-border-main text-text-main rounded-xl text-xs"
+                      >
+                        <option value="estoque">Para Estoque (Reposição/Previsão)</option>
+                        <option value="pedido_venda">Sob Encomenda (Pedido de Venda)</option>
+                      </select>
+                    </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div>
-                    <label className="block font-semibold text-slate-700 mb-1">Tipo de Origem *</label>
-                    <select
-                      value={origemOP}
-                      onChange={(e: any) => setOrigemOP(e.target.value)}
-                      className="w-full p-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold"
-                    >
-                      <option value="estoque">Para Estoque (Reposição/Previsão)</option>
-                      <option value="pedido_venda">Sob Encomenda (Pedido de Venda)</option>
-                    </select>
-                  </div>
-
-                  {origemOP === "pedido_venda" && (
-                    <>
+                    {origemOP === "pedido_venda" ? (
                       <div>
-                        <label className="block font-semibold text-slate-700 mb-1">
-                          Nº Pedido de Venda
-                        </label>
+                        <label className="block font-semibold text-text-main mb-1">Nº Pedido de Venda</label>
                         <input
                           type="text"
                           placeholder="Ex: PV-2026-095"
                           value={numeroPedidoVenda}
                           onChange={(e) => setNumeroPedidoVenda(e.target.value)}
-                          className="w-full p-2 bg-white border border-slate-200 rounded-lg text-xs font-mono font-bold"
+                          className="w-full p-2 bg-surface-hover/70 border border-border-main text-text-main rounded-xl text-xs font-mono font-bold"
                           required
                         />
                       </div>
-
+                    ) : (
                       <div>
-                        <label className="block font-semibold text-slate-700 mb-1">
-                          Cliente / Marca
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="Ex: Lojas Renner, Riachuelo..."
-                          value={clienteNome}
-                          onChange={(e) => setClienteNome(e.target.value)}
-                          className="w-full p-2 bg-white border border-slate-200 rounded-lg text-xs"
-                          required
-                        />
+                        <label className="block font-semibold text-text-main mb-1">Modo de Corte</label>
+                        <select
+                          value={modoCorte}
+                          onChange={(e: any) => setModoCorte(e.target.value)}
+                          className="w-full p-2 bg-surface-hover/70 border border-border-main text-text-main rounded-xl text-xs"
+                        >
+                          <option value="enfesto">Enfesto (Corte em Bloco)</option>
+                          <option value="peca_a_peca">Peça a Peça (Individual)</option>
+                        </select>
                       </div>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {/* Section 2: Produto, Depósito e Modo de Corte */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Produto / Modelo *</label>
-                  <select
-                    value={produtoId}
-                    onChange={(e) => setProdutoId(e.target.value)}
-                    className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium"
-                    required
-                  >
-                    {produtos.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.referencia} - {p.nome}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Modo de Corte *</label>
-                  <select
-                    value={modoCorte}
-                    onChange={(e: any) => setModoCorte(e.target.value)}
-                    className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-amber-900"
-                  >
-                    <option value="enfesto">Enfesto (Corte em camadas para lote)</option>
-                    <option value="peca_a_peca">Peça a Peça (Corte individual sob demanda)</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Depósito de Produção</label>
-                  <select
-                    value={depositoId}
-                    onChange={(e) => setDepositoId(e.target.value)}
-                    className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs"
-                  >
-                    {depositos.map((d) => (
-                      <option key={d.id} value={d.id}>
-                        {d.nome}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Início Previsto</label>
-                  <input
-                    type="date"
-                    value={dataInicio}
-                    onChange={(e) => setDataInicio(e.target.value)}
-                    className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Entrega Prevista</label>
-                  <input
-                    type="date"
-                    value={dataFim}
-                    onChange={(e) => setDataFim(e.target.value)}
-                    className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Observações da OP</label>
-                  <input
-                    type="text"
-                    placeholder="Instruções de costura ou embalagem..."
-                    value={obsOP}
-                    onChange={(e) => setObsOP(e.target.value)}
-                    className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs"
-                  />
-                </div>
-              </div>
-
-              {/* Section 3: Mão de Obra por Etapa (Interna vs Facção) */}
-              <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
-                <span className="font-bold text-slate-800 block text-xs">
-                  2. Definição de Mão de Obra por Etapa
-                </span>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {/* Corte */}
-                  <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-2">
-                    <span className="font-bold text-slate-700 block">Etapa: Corte</span>
-                    <select
-                      value={corteTipo}
-                      onChange={(e: any) => setCorteTipo(e.target.value)}
-                      className="w-full p-1.5 bg-slate-50 border border-slate-200 rounded text-xs font-medium"
-                    >
-                      <option value="interna">Corte Interno</option>
-                      <option value="faccao">Terceirizado / Facção</option>
-                    </select>
+                    )}
                   </div>
 
-                  {/* Costura */}
-                  <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-2">
-                    <span className="font-bold text-slate-700 block">Etapa: Costura</span>
-                    <select
-                      value={costuraTipo}
-                      onChange={(e: any) => setCosturaTipo(e.target.value)}
-                      className="w-full p-1.5 bg-slate-50 border border-slate-200 rounded text-xs font-medium"
-                    >
-                      <option value="faccao">Facção Terceirizada</option>
-                      <option value="interna">Costura Interna</option>
-                    </select>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-semibold text-text-main mb-1">Produto / Modelo *</label>
+                      <select
+                        value={produtoId}
+                        onChange={(e) => setProdutoId(e.target.value)}
+                        className="w-full p-2 bg-surface-hover/70 border border-border-main text-text-main rounded-xl text-xs"
+                        required
+                      >
+                        {produtos.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.referencia} - {p.nome}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
 
-                    {costuraTipo === "faccao" && (
+                    <div>
+                      <label className="block font-semibold text-text-main mb-1">Previsão de Conclusão</label>
+                      <input
+                        type="date"
+                        value={dataFim}
+                        onChange={(e) => setDataFim(e.target.value)}
+                        className="w-full p-2 bg-surface-hover/70 border border-border-main text-text-main rounded-xl text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-3 border-t border-border-subtle">
+                    <button
+                      type="button"
+                      onClick={() => setModalNovaOP(false)}
+                      className="px-4 py-2 bg-surface hover:bg-surface-hover border border-border-main text-text-main rounded-xl font-semibold cursor-pointer"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEtapaNovaOP(2)}
+                      className="px-4 py-2 bg-brand-primary hover:bg-brand-primary-hover text-white rounded-xl font-semibold cursor-pointer flex items-center gap-1"
+                    >
+                      Avançar para Grade
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* ETAPA 2: Grade de Tamanhos */}
+              {etapaNovaOP === 2 && (
+                <div className="space-y-3.5 animate-in fade-in duration-150">
+                  <div className="p-4 bg-surface-hover/50 rounded-xl border border-border-main space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-text-main">
+                        Grade de Produção — {produtoSelecionado?.nome}
+                      </span>
+                      <strong className="text-brand-primary font-mono text-xs">
+                        Total: {totalPlanejadoNovaOP} peças
+                      </strong>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+                      {produtoSelecionado?.variacoes?.map((variacao) => (
+                        <div key={variacao.id} className="p-2 bg-surface rounded-xl border border-border-main">
+                          <label className="block text-[11px] font-semibold text-text-muted mb-1">
+                            {variacao.cor_nome} / {variacao.tamanho}
+                          </label>
+                          <input
+                            type="number"
+                            placeholder="0"
+                            value={gradeQuantidades[variacao.id] || ""}
+                            onChange={(e) =>
+                              setGradeQuantidades({
+                                ...gradeQuantidades,
+                                [variacao.id]: Number(e.target.value),
+                              })
+                            }
+                            className="w-full p-1.5 bg-surface-hover/70 border border-border-subtle rounded-lg text-xs font-mono font-bold text-text-main"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center pt-3 border-t border-border-subtle">
+                    <button
+                      type="button"
+                      onClick={() => setEtapaNovaOP(1)}
+                      className="px-3.5 py-2 bg-surface hover:bg-surface-hover border border-border-main text-text-main rounded-xl font-semibold cursor-pointer"
+                    >
+                      ← Voltar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (totalPlanejadoNovaOP > 0) setEtapaNovaOP(3);
+                      }}
+                      className="px-4 py-2 bg-brand-primary hover:bg-brand-primary-hover text-white rounded-xl font-semibold cursor-pointer flex items-center gap-1"
+                    >
+                      Avançar para Insumos & Facção
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* ETAPA 3: Insumos & Facção */}
+              {etapaNovaOP === 3 && (
+                <div className="space-y-3.5 animate-in fade-in duration-150">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-semibold text-text-main mb-1">Lote de Tecido (MP)</label>
+                      <select
+                        value={loteConsumoId}
+                        onChange={(e) => setLoteConsumoId(e.target.value)}
+                        className="w-full p-2 bg-surface-hover/70 border border-border-main text-text-main rounded-xl text-xs font-mono"
+                      >
+                        {lotes.map((lote) => (
+                          <option key={lote.id} value={lote.id}>
+                            {lote.codigo_lote} ({lote.item_descricao}) - {lote.quantidade_atual} {lote.unidade_medida}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block font-semibold text-text-main mb-1">Execução de Costura</label>
+                      <select
+                        value={costuraTipo}
+                        onChange={(e: any) => setCosturaTipo(e.target.value)}
+                        className="w-full p-2 bg-surface-hover/70 border border-border-main text-text-main rounded-xl text-xs"
+                      >
+                        <option value="interna">Costura Interna (Célula Fábrica)</option>
+                        <option value="faccao">Facção Externa Terceirizada</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {costuraTipo === "faccao" && (
+                    <div>
+                      <label className="block font-semibold text-text-main mb-1">Parceiro de Facção</label>
                       <select
                         value={costuraFaccaoId}
                         onChange={(e) => setCosturaFaccaoId(e.target.value)}
-                        className="w-full p-1.5 bg-indigo-50 border border-indigo-200 rounded text-xs text-indigo-900"
+                        className="w-full p-2 bg-surface-hover/70 border border-border-main text-text-main rounded-xl text-xs"
                       >
                         {fornecedores
                           .filter((f) => f.tipo === "faccao")
@@ -561,158 +561,53 @@ export default function ProducaoPCPPage() {
                             </option>
                           ))}
                       </select>
-                    )}
-                  </div>
-
-                  {/* Acabamento */}
-                  <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-2">
-                    <span className="font-bold text-slate-700 block">Etapa: Acabamento</span>
-                    <select
-                      value={acabamentoTipo}
-                      onChange={(e: any) => setAcabamentoTipo(e.target.value)}
-                      className="w-full p-1.5 bg-slate-50 border border-slate-200 rounded text-xs font-medium"
-                    >
-                      <option value="interna">Acabamento Interno</option>
-                      <option value="faccao">Facção Externa</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              {/* Matriz de Quantidades por Grade */}
-              <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-bold text-slate-800">3. Distribuição de Peças por Grade</h3>
-                  <span className="font-bold text-sky-700">
-                    Total: {totalPlanejadoNovaOP} peças programadas
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {produtoSelecionado.variacoes?.map((v) => (
-                    <div key={v.id} className="bg-white p-2.5 rounded-lg border border-slate-200 space-y-1">
-                      <span className="text-[11px] font-semibold text-slate-700 block truncate">
-                        {v.cor_nome} - {v.tamanho}
-                      </span>
-                      <input
-                        type="number"
-                        min="0"
-                        placeholder="Qtd"
-                        value={gradeQuantidades[v.id] || ""}
-                        onChange={(e) => {
-                          setGradeQuantidades({
-                            ...gradeQuantidades,
-                            [v.id]: Number(e.target.value),
-                          });
-                        }}
-                        className="w-full p-1 bg-slate-50 border border-slate-200 rounded text-xs font-bold text-slate-900"
-                      />
                     </div>
-                  ))}
-                </div>
-              </div>
+                  )}
 
-              {/* Reserva de Lote de Tecido & Consumo de Retalhos */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="p-4 bg-sky-50/60 rounded-xl border border-sky-200 space-y-2">
-                  <span className="font-bold text-sky-950 flex items-center gap-1.5">
-                    <QrCode className="w-4 h-4 text-sky-600" />
-                    Lote de Tecido Virgem
-                  </span>
-                  <select
-                    value={loteConsumoId}
-                    onChange={(e) => setLoteConsumoId(e.target.value)}
-                    className="w-full p-2 bg-white border border-sky-300 rounded-lg text-xs"
-                  >
-                    <option value="">Nenhum</option>
-                    {lotes.map((l) => (
-                      <option key={l.id} value={l.id}>
-                        {l.codigo_lote} ({l.cor_nome}) - Saldo: {l.quantidade_atual} {l.unidade_medida}
-                      </option>
-                    ))}
-                  </select>
-                  <span className="text-[11px] text-slate-500 block">
-                    Necessidade: ~{formatNumber(kgNecessariosTecido, 2)} kg
-                  </span>
+                  <div className="flex justify-between items-center pt-3 border-t border-border-subtle">
+                    <button
+                      type="button"
+                      onClick={() => setEtapaNovaOP(2)}
+                      className="px-3.5 py-2 bg-surface hover:bg-surface-hover border border-border-main text-text-main rounded-xl font-semibold cursor-pointer"
+                    >
+                      ← Voltar
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-brand-primary hover:bg-brand-primary-hover text-white rounded-xl font-semibold shadow-sm cursor-pointer"
+                    >
+                      Lançar Ordem de Produção (#{totalPlanejadoNovaOP} pçs)
+                    </button>
+                  </div>
                 </div>
-
-                <div className="p-4 bg-amber-50/60 rounded-xl border border-amber-200 space-y-2">
-                  <span className="font-bold text-amber-950 flex items-center gap-1.5">
-                    <Scissors className="w-4 h-4 text-amber-600" />
-                    Reaproveitar Retalho Disponível
-                  </span>
-                  <select
-                    value={retalhoConsumoId}
-                    onChange={(e) => setRetalhoConsumoId(e.target.value)}
-                    className="w-full p-2 bg-white border border-amber-300 rounded-lg text-xs"
-                  >
-                    <option value="">Não utilizar retalhos</option>
-                    {retalhos
-                      .filter((r) => r.status === "disponivel")
-                      .map((r) => (
-                        <option key={r.id} value={r.id}>
-                          {r.codigo_retalho} ({r.cor_nome}) - {r.peso_residual_kg} kg ({r.metragem_residual_m}m)
-                        </option>
-                      ))}
-                  </select>
-                  <span className="text-[11px] text-amber-800 block">
-                    Consumo prioritário de sobras para economia de tecido
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setModalNovaOP(false)}
-                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-semibold"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={totalPlanejadoNovaOP <= 0}
-                  className="px-4 py-2 bg-sky-600 hover:bg-sky-700 disabled:opacity-50 text-white rounded-lg font-semibold"
-                >
-                  Liberar Ordem de Produção
-                </button>
-              </div>
+              )}
             </form>
           </div>
         </div>
       )}
 
-      {/* Modal Apontamento de Produção em Tempo Real (com Retalhos) */}
+      {/* Modal Apontamento de Produção */}
       {opParaApontamento && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-xl w-full p-6 shadow-xl border border-slate-200 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <div>
-                <h2 className="text-base font-bold text-slate-900">
-                  Apontamento — OP #{opParaApontamento.numero_op} ({opParaApontamento.produto_nome})
-                </h2>
-                <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-500">
-                  <span>Modo: <strong>{opParaApontamento.modo_corte}</strong></span>
-                  <span>• Origem: <strong>{opParaApontamento.origem}</strong></span>
-                  {opParaApontamento.cliente_nome && <span>• Cliente: <strong>{opParaApontamento.cliente_nome}</strong></span>}
-                </div>
-              </div>
-              <button
-                onClick={() => setOpParaApontamento(null)}
-                className="text-slate-400 hover:text-slate-600 text-sm font-semibold"
-              >
+        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-surface rounded-2xl max-w-md w-full p-6 shadow-2xl border border-border-main space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-border-subtle">
+              <h3 className="text-sm font-bold text-text-main flex items-center gap-2">
+                <Factory className="w-4 h-4 text-brand-primary" />
+                Apontamento OP #{opParaApontamento.numero_op}
+              </h3>
+              <button onClick={() => setOpParaApontamento(null)} className="text-text-dim hover:text-text-main p-1">
                 ✕
               </button>
             </div>
 
-            <form onSubmit={handleSalvarApontamento} className="space-y-4 text-xs">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <form onSubmit={handleSalvarApontamento} className="space-y-3 text-xs">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Etapa de Produção *</label>
+                  <label className="block font-semibold text-text-main mb-1">Etapa *</label>
                   <select
                     value={etapaApontamento}
                     onChange={(e: any) => setEtapaApontamento(e.target.value)}
-                    className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800"
+                    className="w-full p-2 bg-surface-hover/70 border border-border-main text-text-main rounded-xl text-xs font-semibold"
                   >
                     <option value="enfesto_corte">1. Enfesto & Corte</option>
                     <option value="costura_interna">2. Costura Interna</option>
@@ -723,130 +618,81 @@ export default function ProducaoPCPPage() {
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">
-                    {etapaApontamento === "faccao_externa" ? "Terceirizado / Facção" : "Operador / Célula"}
-                  </label>
-                  {etapaApontamento === "faccao_externa" ? (
-                    <select
-                      value={terceirizadoId}
-                      onChange={(e) => setTerceirizadoId(e.target.value)}
-                      className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs"
-                    >
-                      {fornecedores
-                        .filter((f) => f.tipo === "faccao")
-                        .map((fac) => (
-                          <option key={fac.id} value={fac.id}>
-                            {fac.nome_fantasia || fac.razao_social}
-                          </option>
-                        ))}
-                    </select>
-                  ) : (
-                    <input
-                      type="text"
-                      value={operadorNome}
-                      onChange={(e) => setOperadorNome(e.target.value)}
-                      className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs"
-                    />
-                  )}
-                </div>
-
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">
-                    Quantidade de Peças Processadas *
-                  </label>
+                  <label className="block font-semibold text-text-main mb-1">Peças Processadas *</label>
                   <input
                     type="number"
                     value={qtdProcessada}
                     onChange={(e) => setQtdProcessada(Number(e.target.value))}
-                    className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-900"
+                    className="w-full p-2 bg-surface-hover/70 border border-border-main text-text-main rounded-xl text-xs font-mono font-bold"
                     required
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Tempo Gasto (minutos)</label>
-                  <input
-                    type="number"
-                    value={tempoMinutos}
-                    onChange={(e) => setTempoMinutos(Number(e.target.value))}
-                    className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Peças com Defeito / 2ª Qualidade</label>
-                  <input
-                    type="number"
-                    value={qtdDefeito}
-                    onChange={(e) => setQtdDefeito(Number(e.target.value))}
-                    className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-rose-600 font-bold"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Motivo do Defeito (se houver)</label>
-                  <input
-                    type="text"
-                    placeholder="Ex: Ponto frouxo na bainha..."
-                    value={motivoDefeito}
-                    onChange={(e) => setMotivoDefeito(e.target.value)}
-                    className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs"
                   />
                 </div>
               </div>
 
-              {/* Registro Automático de Retalho no Corte (PRD v2) */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold text-text-main mb-1">Tempo Gasto (min)</label>
+                  <input
+                    type="number"
+                    value={tempoMinutos}
+                    onChange={(e) => setTempoMinutos(Number(e.target.value))}
+                    className="w-full p-2 bg-surface-hover/70 border border-border-main text-text-main rounded-xl text-xs font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-text-main mb-1">Defeito / 2ª Qualidade</label>
+                  <input
+                    type="number"
+                    value={qtdDefeito}
+                    onChange={(e) => setQtdDefeito(Number(e.target.value))}
+                    className="w-full p-2 bg-surface-hover/70 border border-border-main text-rose-400 rounded-xl text-xs font-mono font-bold"
+                  />
+                </div>
+              </div>
+
+              {/* Sobra de retalho no corte */}
               {etapaApontamento === "enfesto_corte" && (
-                <div className="p-3.5 bg-amber-50 rounded-xl border border-amber-200 space-y-2">
-                  <span className="font-bold text-amber-950 flex items-center gap-1.5">
-                    <Scissors className="w-4 h-4 text-amber-700" />
-                    Sobra Aproveitável de Tecido (Geração Automática de Retalho)
+                <div className="p-3 bg-amber-500/10 rounded-xl border border-amber-500/20 space-y-1.5">
+                  <span className="font-bold text-amber-400 flex items-center gap-1.5 text-[11px]">
+                    <Scissors className="w-3.5 h-3.5" />
+                    Sobra de Retalho Gerada (kg)
                   </span>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[11px] font-semibold text-amber-900 mb-1">
-                        Peso do Retalho Gerado (kg)
-                      </label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        placeholder="Ex: 3.5"
-                        value={retalhoGeradoKg || ""}
-                        onChange={(e) => setRetalhoGeradoKg(Number(e.target.value))}
-                        className="w-full p-1.5 bg-white border border-amber-300 rounded text-xs font-bold"
-                      />
-                    </div>
-                    <div className="flex items-center text-[11px] text-amber-800">
-                      O sistema criará automaticamente um lote em <strong>Estoque de Retalhos</strong> vinculado a esta OP e ao lote de origem.
-                    </div>
-                  </div>
+                  <input
+                    type="number"
+                    step="0.01"
+                    placeholder="Ex: 2.5 kg"
+                    value={retalhoGeradoKg || ""}
+                    onChange={(e) => setRetalhoGeradoKg(Number(e.target.value))}
+                    className="w-full p-1.5 bg-surface border border-border-main rounded-lg text-xs font-mono font-bold text-text-main"
+                  />
                 </div>
               )}
 
-              <div className="flex items-center gap-2 pt-2">
+              <div className="flex items-center gap-2 pt-1">
                 <input
                   type="checkbox"
                   id="finalizar"
                   checked={finalizarEtapa}
                   onChange={(e) => setFinalizarEtapa(e.target.checked)}
-                  className="rounded text-sky-600"
+                  className="rounded border-border-main text-brand-primary"
                 />
-                <label htmlFor="finalizar" className="font-semibold text-slate-800">
+                <label htmlFor="finalizar" className="font-semibold text-text-main text-[11px]">
                   Avançar OP para o próximo estágio automaticamente
                 </label>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-border-subtle">
                 <button
                   type="button"
                   onClick={() => setOpParaApontamento(null)}
-                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-semibold"
+                  className="px-4 py-2 bg-surface hover:bg-surface-hover text-text-main rounded-xl font-semibold cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg font-semibold"
+                  className="px-4 py-2 bg-brand-primary hover:bg-brand-primary-hover text-white rounded-xl font-semibold shadow-sm cursor-pointer"
                 >
                   Gravar Apontamento
                 </button>
