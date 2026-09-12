@@ -111,22 +111,29 @@ Para aplicar no seu projeto Supabase:
 
 ---
 
-## 🌐 Publicação em Produção (Deploy)
+## 🌐 Publicação em Produção (Deploy no Netlify)
 
-A arquitetura do Fluxa Têxtil foi projetada para hospedagem com **zero atrito**:
+A arquitetura do Fluxa Têxtil está configurada e otimizada para deploy contínuo no **Netlify**:
 
-### 1. Frontend & API (Next.js 15) na **Vercel**
-1. Conecte sua conta do GitHub à [Vercel](https://vercel.com/).
-2. Importe o repositório `fluxa-textil`.
-3. Configure as variáveis de ambiente em **Project Settings > Environment Variables**:
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `SUPABASE_SERVICE_ROLE_KEY`
-   - `NEXT_PUBLIC_APP_URL`
-4. Clique em **Deploy**. A cada push na branch `main`, a Vercel executará o build de produção automaticamente.
+### 1. Frontend & SSR (Next.js 15) no **Netlify**
+1. Acesse [netlify.com](https://app.netlify.com/) e faça login com sua conta do GitHub (`ideiacriacaoia`).
+2. Clique em **Add new site > Import an existing project**.
+3. Selecione o provedor **GitHub** e escolha o repositório **`fluxa`**.
+4. As configurações de build serão preenchidas automaticamente pelo `netlify.toml`:
+   - **Branch to deploy:** `main`
+   - **Build command:** `npm run build`
+   - **Publish directory:** `.next`
+5. Na seção **Environment variables**, adicione:
+   - `NEXT_PUBLIC_SUPABASE_URL` = `https://seu-projeto.supabase.co`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = `sua-chave-anon-aqui`
+   - `SUPABASE_SERVICE_ROLE_KEY` = `sua-chave-service-role`
+   - `NEXT_PUBLIC_APP_URL` = `https://seu-site.netlify.app`
+   - `NODE_VERSION` = `20`
+6. Clique em **Deploy fluxa**. O Netlify gerará o build com SSL automático e CI/CD integrado.
 
 ### 2. Banco de Dados no **Supabase Cloud**
-- Utilize o plano gratuito ou Pro do [Supabase](https://supabase.com/) com PostgreSQL gerenciado e backups automáticos.
+- Utilize o plano do [Supabase](https://supabase.com/) com PostgreSQL gerenciado e execute as migrações da pasta `supabase/migrations/`.
+
 
 ---
 
